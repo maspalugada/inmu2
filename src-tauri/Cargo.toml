@@ -1,0 +1,18 @@
+[package]
+name = "streamspark"
+version = "0.1.0"
+description = "A multimedia live production app"
+authors = ["You"]
+license = ""
+repository = ""
+edition = "2021"
+rust-version = "1.70"
+
+[build-dependencies]
+tauri-build = { version = "2.0.0-beta.20", features = [] }
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tauri = { version = "2.0.0-beta.23", features = [] }
+tauri-plugin-shell = "2.0.0-beta.8"
