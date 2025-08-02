@@ -13,6 +13,9 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using LiveAppCore;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Threading;
 
 namespace LiveApp.UI.CSharp
 {
@@ -21,14 +24,21 @@ namespace LiveApp.UI.CSharp
     /// </summary>
     public partial class MainWindow : Window
     {
+        private CoreFunctions coreFunctions;
+        private WriteableBitmap writeableBitmap;
+        private Timer timer;
+
         public MainWindow()
         {
             InitializeComponent();
+            coreFunctions = new CoreFunctions();
             this.Loaded += MainWindow_Loaded;
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
+            // The GStreamer version check is still useful for debugging.
+            // You can leave it or remove it.
             try
             {
                 var version = CoreFunctions.GetGStreamerVersion();
@@ -38,6 +48,18 @@ namespace LiveApp.UI.CSharp
             {
                 MessageBox.Show($"An error occurred: {ex.Message}", "Error");
             }
+        }
+
+        private void StartWebcam_Click(object sender, RoutedEventArgs e)
+        {
+            // For now, we'll just start the pipeline.
+            // The frame handling will be added later.
+            coreFunctions.StartWebcam();
+        }
+
+        private void StopWebcam_Click(object sender, RoutedEventArgs e)
+        {
+            coreFunctions.StopWebcam();
         }
     }
 }

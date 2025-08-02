@@ -1,14 +1,20 @@
 #pragma once
 
-#ifdef LIVEAPPCORECPP_EXPORTS
-#define LIVEAPP_API __declspec(dllexport)
-#else
-#define LIVEAPP_API __declspec(dllimport)
-#endif
+#include "PipelineManager.h"
 
 namespace LiveAppCore {
     public ref class CoreFunctions {
     public:
+        CoreFunctions();
+        ~CoreFunctions();
+        !CoreFunctions();
+
+        void StartWebcam();
+        void StopWebcam();
+
         static System::String^ GetGStreamerVersion();
+
+    private:
+        PipelineManager* pipelineManager;
     };
 }

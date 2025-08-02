@@ -90,9 +90,11 @@
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="LiveAppCore.cpp" />
+    <ClCompile Include="PipelineManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LiveAppCore.h" />
+    <ClInclude Include="PipelineManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
