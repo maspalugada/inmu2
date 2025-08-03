@@ -73,6 +73,12 @@ namespace LiveAppCore {
         }
     }
 
+    void CoreFunctions::UpdateSourcePosition(System::String^ id, int x, int y) {
+        if (pipelineManager) {
+            pipelineManager->UpdateSourcePosition(msclr::interop::marshal_as<std::string>(id), x, y);
+        }
+    }
+
     void CoreFunctions::Transition() {
         if (pipelineManager) {
             pipelineManager->Transition();

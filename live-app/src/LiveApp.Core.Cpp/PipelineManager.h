@@ -13,6 +13,8 @@ public:
     std::vector<guint8> frameBuffer;
     int frameWidth = 0;
     int frameHeight = 0;
+    int xpos = 0;
+    int ypos = 0;
     std::mutex frameMutex;
 };
 
@@ -29,6 +31,7 @@ public:
     void StartPipeline(const std::string& id);
     void StopPipeline(const std::string& id);
     void SetAsPreview(const std::string& id);
+    void UpdateSourcePosition(const std::string& id, int x, int y);
     void Transition();
     void GetLatestFrame(const std::string& id, std::vector<guint8>& buffer, int& width, int& height);
 
@@ -37,6 +40,6 @@ private:
 
     std::map<std::string, PipelineWrapper> pipelines;
     std::string previewId;
-    std::string programId;
+    GstElement* compositorPipeline = nullptr;
     FrameCallback frameCallback;
 };

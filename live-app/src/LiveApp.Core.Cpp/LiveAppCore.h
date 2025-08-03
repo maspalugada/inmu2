@@ -16,6 +16,7 @@ namespace LiveAppCore {
         System::String^ CreateVideoFileSource(System::String^ filePath);
         void StopSource(System::String^ id);
         void SetAsPreview(System::String^ id);
+        void UpdateSourcePosition(System::String^ id, int x, int y);
         void Transition();
         array<System::Byte>^ GetLatestFrame(System::String^ id, int% width, int% height);
 

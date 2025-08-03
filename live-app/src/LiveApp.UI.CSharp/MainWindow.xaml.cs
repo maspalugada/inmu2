@@ -1,19 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -22,10 +10,24 @@ using LiveAppCore;
 
 namespace LiveApp.UI.CSharp
 {
-    public class Source
+    public class Source : INotifyPropertyChanged
     {
         public string Id { get; set; }
         public string Name { get; set; }
+        private double x;
+        public double X { get { return x; } set { x = value; OnPropertyChanged(nameof(X)); } }
+        private double y;
+        public double Y { get { return y; } set { y = value; OnPropertyChanged(nameof(Y)); } }
+        public double Width { get; set; } = 320;
+        public double Height { get; set; } = 240;
+        private WriteableBitmap bitmap;
+        public WriteableBitmap Bitmap { get { return bitmap; } set { bitmap = value; OnPropertyChanged(nameof(Bitmap)); } }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged(string name)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        }
     }
 
     public class Scene
@@ -37,8 +39,6 @@ namespace LiveApp.UI.CSharp
     public partial class MainWindow : Window
     {
         private CoreFunctions coreFunctions;
-        private Dictionary<string, WriteableBitmap> writeableBitmaps = new Dictionary<string, WriteableBitmap>();
-        private string previewId;
         private string programId;
         private bool isRendering = false;
 
@@ -51,9 +51,12 @@ namespace LiveApp.UI.CSharp
             coreFunctions.OnFrameReady += OnFrameReady;
             this.Closing += (s, e) =>
             {
-                foreach (var id in writeableBitmaps.Keys)
+                foreach (var scene in scenes)
                 {
-                    coreFunctions.StopSource(id);
+                    foreach (var source in scene.Sources)
+                    {
+                        coreFunctions.StopSource(source.Id);
+                    }
                 }
             };
 
@@ -82,24 +85,31 @@ namespace LiveApp.UI.CSharp
             if (frameData == null || width == 0 || height == 0)
                 return;
 
-            if (!writeableBitmaps.ContainsKey(id) || writeableBitmaps[id].Width != width || writeableBitmaps[id].Height != height)
+            Source sourceToUpdate = null;
+            foreach (var scene in scenes)
             {
-                writeableBitmaps[id] = new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgr32, null);
+                foreach (var source in scene.Sources)
+                {
+                    if (source.Id == id)
+                    {
+                        sourceToUpdate = source;
+                        break;
+                    }
+                }
+                if (sourceToUpdate != null) break;
             }
 
-            var bitmap = writeableBitmaps[id];
-            bitmap.Lock();
-            System.Runtime.InteropServices.Marshal.Copy(frameData, 0, bitmap.BackBuffer, frameData.Length);
-            bitmap.AddDirtyRect(new Int32Rect(0, 0, width, height));
-            bitmap.Unlock();
+            if (sourceToUpdate != null)
+            {
+                if (sourceToUpdate.Bitmap == null || sourceToUpdate.Bitmap.Width != width || sourceToUpdate.Bitmap.Height != height)
+                {
+                    sourceToUpdate.Bitmap = new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgr32, null);
+                }
 
-            if (id == previewId)
-            {
-                PreviewImage.Source = bitmap;
-            }
-            if (id == programId)
-            {
-                ProgramImage.Source = bitmap;
+                sourceToUpdate.Bitmap.Lock();
+                System.Runtime.InteropServices.Marshal.Copy(frameData, 0, sourceToUpdate.Bitmap.BackBuffer, frameData.Length);
+                sourceToUpdate.Bitmap.AddDirtyRect(new Int32Rect(0, 0, width, height));
+                sourceToUpdate.Bitmap.Unlock();
             }
         }
 
@@ -116,7 +126,6 @@ namespace LiveApp.UI.CSharp
                 foreach (var source in selectedScene.Sources)
                 {
                     coreFunctions.StopSource(source.Id);
-                    writeableBitmaps.Remove(source.Id);
                 }
                 scenes.Remove(selectedScene);
             }
@@ -168,7 +177,6 @@ namespace LiveApp.UI.CSharp
             if (ScenesListBox.SelectedItem is Scene selectedScene && SourcesListBox.SelectedItem is Source selectedSource)
             {
                 coreFunctions.StopSource(selectedSource.Id);
-                writeableBitmaps.Remove(selectedSource.Id);
                 selectedScene.Sources.Remove(selectedSource);
             }
         }
@@ -177,54 +185,47 @@ namespace LiveApp.UI.CSharp
         {
             if (ScenesListBox.SelectedItem is Scene selectedScene)
             {
-                SourcesListBox.ItemsSource = selectedScene.Sources;
+                PreviewItemsControl.ItemsSource = selectedScene.Sources;
             }
         }
 
         private void SourcesListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (SourcesListBox.SelectedItem is Source selectedSource)
-            {
-                coreFunctions.SetAsPreview(selectedSource.Id);
-                previewId = selectedSource.Id;
-            }
+            // This is now handled by the ItemsControl
         }
 
         private void Transition_Click(object sender, RoutedEventArgs e)
         {
-            coreFunctions.Transition();
-            programId = previewId;
-            if (previewId != null)
-            {
-                ProgramImage.Source = writeableBitmaps.ContainsKey(previewId) ? writeableBitmaps[previewId] : null;
-            }
+            // This needs to be re-thought with the new compositor logic
         }
 
         private bool isDragging = false;
         private Point dragStartPoint;
+        private Source draggedSource;
 
         private void PreviewImage_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            if (SourcesListBox.SelectedItem is Source selectedSource)
+            if ((sender as FrameworkElement).DataContext is Source selectedSource)
             {
                 isDragging = true;
-                dragStartPoint = e.GetPosition(PreviewImage);
-                PreviewImage.CaptureMouse();
+                draggedSource = selectedSource;
+                dragStartPoint = e.GetPosition(this);
+                (sender as UIElement).CaptureMouse();
             }
         }
 
         private void PreviewImage_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            if (isDragging)
+            if (isDragging && draggedSource != null)
             {
-                Point currentPoint = e.GetPosition(PreviewImage);
+                Point currentPoint = e.GetPosition(this);
                 double deltaX = currentPoint.X - dragStartPoint.X;
                 double deltaY = currentPoint.Y - dragStartPoint.Y;
 
-                // This is where we would update the position of the source in the C++ core.
-                // For now, we will just move the image control.
-                Canvas.SetLeft(PreviewImage, Canvas.GetLeft(PreviewImage) + deltaX);
-                Canvas.SetTop(PreviewImage, Canvas.GetTop(PreviewImage) + deltaY);
+                draggedSource.X += deltaX;
+                draggedSource.Y += deltaY;
+
+                coreFunctions.UpdateSourcePosition(draggedSource.Id, (int)draggedSource.X, (int)draggedSource.Y);
 
                 dragStartPoint = currentPoint;
             }
@@ -233,7 +234,8 @@ namespace LiveApp.UI.CSharp
         private void PreviewImage_MouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             isDragging = false;
-            PreviewImage.ReleaseMouseCapture();
+            draggedSource = null;
+            (sender as UIElement).ReleaseMouseCapture();
         }
     }
 }

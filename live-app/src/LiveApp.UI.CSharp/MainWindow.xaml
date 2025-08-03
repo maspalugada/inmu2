@@ -21,9 +21,20 @@
             </Grid.ColumnDefinitions>
 
             <Border BorderBrush="Gray" BorderThickness="1" Margin="5">
-                <Canvas>
-                    <Image x:Name="PreviewImage" MouseLeftButtonDown="PreviewImage_MouseLeftButtonDown" MouseMove="PreviewImage_MouseMove" MouseLeftButtonUp="PreviewImage_MouseLeftButtonUp"/>
-                </Canvas>
+                <ItemsControl x:Name="PreviewItemsControl">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <Canvas />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Image Source="{Binding Bitmap}" Width="{Binding Width}" Height="{Binding Height}"
+                                   Canvas.Left="{Binding X}" Canvas.Top="{Binding Y}"
+                                   MouseLeftButtonDown="PreviewImage_MouseLeftButtonDown" MouseMove="PreviewImage_MouseMove" MouseLeftButtonUp="PreviewImage_MouseLeftButtonUp"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
             </Border>
 
             <Button Content="Transition" Grid.Column="1" VerticalAlignment="Center" Margin="10" Click="Transition_Click"/>

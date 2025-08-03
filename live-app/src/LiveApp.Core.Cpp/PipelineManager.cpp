@@ -120,6 +120,47 @@ void PipelineManager::SetAsPreview(const std::string& id) {
     previewId = id;
 }
 
+void PipelineManager::UpdateSourcePosition(const std::string& id, int x, int y) {
+    auto it = pipelines.find(id);
+    if (it != pipelines.end()) {
+        it->second.xpos = x;
+        it->second.ypos = y;
+    }
+}
+
 void PipelineManager::Transition() {
-    programId = previewId;
+    if (compositorPipeline == nullptr) {
+        std::string pipeline_str = "compositor name=comp ! videoconvert ! video/x-raw,format=BGRx ! appsink name=program";
+        compositorPipeline = gst_parse_launch(pipeline_str.c_str(), nullptr);
+
+        GstElement* sink = gst_bin_get_by_name(GST_BIN(compositorPipeline), "program");
+        if (sink) {
+            g_object_set(sink, "emit-signals", TRUE, "sync", FALSE, NULL);
+            g_signal_connect(sink, "new-sample", G_CALLBACK(OnNewSample), this);
+            gst_object_unref(sink);
+        }
+        gst_element_set_state(compositorPipeline, GST_STATE_PLAYING);
+    }
+
+    auto it = pipelines.find(previewId);
+    if (it != pipelines.end()) {
+        GstElement* compositor = gst_bin_get_by_name(GST_BIN(compositorPipeline), "comp");
+        if (compositor) {
+            GstPad* sinkpad = gst_element_request_pad_simple(compositor, "sink_%u");
+            if (sinkpad) {
+                GstElement* pipeline = it->second.pipeline;
+                GstElement* source = gst_bin_get_by_name(GST_BIN(pipeline), "ksvideosrc0"); // This needs to be more generic
+                if (source) {
+                    GstPad* srcpad = gst_element_get_static_pad(source, "src");
+                    if (srcpad) {
+                        gst_pad_link(srcpad, sinkpad);
+                        gst_object_unref(srcpad);
+                    }
+                    gst_object_unref(source);
+                }
+                gst_object_unref(sinkpad);
+            }
+            gst_object_unref(compositor);
+        }
+    }
 }
