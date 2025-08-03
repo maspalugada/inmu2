@@ -18,13 +18,21 @@ namespace LiveAppCore {
 
     void CoreFunctions::StartWebcam() {
         if (pipelineManager) {
-            if (pipelineManager->CreatePipeline()) {
+            if (pipelineManager->CreateWebcamPipeline()) {
                 pipelineManager->StartPipeline();
             }
         }
     }
 
-    void CoreFunctions::StopWebcam() {
+    void CoreFunctions::StartScreenCapture() {
+        if (pipelineManager) {
+            if (pipelineManager->CreateScreenCapturePipeline()) {
+                pipelineManager->StartPipeline();
+            }
+        }
+    }
+
+    void CoreFunctions::Stop() {
         if (pipelineManager) {
             pipelineManager->StopPipeline();
         }

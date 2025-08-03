@@ -12,7 +12,8 @@ namespace LiveAppCore {
         !CoreFunctions();
 
         void StartWebcam();
-        void StopWebcam();
+        void StartScreenCapture();
+        void Stop();
         array<System::Byte>^ GetLatestFrame(int% width, int% height);
 
         static System::String^ GetGStreamerVersion();

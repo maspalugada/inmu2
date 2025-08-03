@@ -12,7 +12,8 @@ public:
     PipelineManager(FrameCallback callback);
     ~PipelineManager();
 
-    bool CreatePipeline();
+    bool CreateWebcamPipeline();
+    bool CreateScreenCapturePipeline();
     void StartPipeline();
     void StopPipeline();
 

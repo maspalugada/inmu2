@@ -14,7 +14,8 @@
         <Image x:Name="WebcamImage" Grid.Row="0"/>
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
             <Button Content="Start Webcam" Click="StartWebcam_Click" Margin="5"/>
-            <Button Content="Stop Webcam" Click="StopWebcam_Click" Margin="5"/>
+            <Button Content="Start Screen Capture" Click="StartScreenCapture_Click" Margin="5"/>
+            <Button Content="Stop" Click="Stop_Click" Margin="5"/>
         </StackPanel>
     </Grid>
 </Window>

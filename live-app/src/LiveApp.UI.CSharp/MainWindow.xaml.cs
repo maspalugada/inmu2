@@ -71,9 +71,14 @@ namespace LiveApp.UI.CSharp
             coreFunctions.StartWebcam();
         }
 
-        private void StopWebcam_Click(object sender, RoutedEventArgs e)
+        private void StartScreenCapture_Click(object sender, RoutedEventArgs e)
         {
-            coreFunctions.StopWebcam();
+            coreFunctions.StartScreenCapture();
+        }
+
+        private void Stop_Click(object sender, RoutedEventArgs e)
+        {
+            coreFunctions.Stop();
             writeableBitmap = null;
             WebcamImage.Source = null;
         }

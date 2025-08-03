@@ -47,8 +47,26 @@ void PipelineManager::GetLatestFrame(std::vector<guint8>& buffer, int& width, in
     height = frameHeight;
 }
 
-bool PipelineManager::CreatePipeline() {
+bool PipelineManager::CreateWebcamPipeline() {
     const char* pipeline_str = "ksvideosrc ! videoconvert ! video/x-raw,format=BGRx ! appsink name=sink";
+    pipeline = gst_parse_launch(pipeline_str, nullptr);
+
+    if (!pipeline) {
+        return false;
+    }
+
+    GstElement* sink = gst_bin_get_by_name(GST_BIN(pipeline), "sink");
+    if (sink) {
+        g_object_set(sink, "emit-signals", TRUE, "sync", FALSE, NULL);
+        g_signal_connect(sink, "new-sample", G_CALLBACK(OnNewSample), this);
+        gst_object_unref(sink);
+    }
+
+    return true;
+}
+
+bool PipelineManager::CreateScreenCapturePipeline() {
+    const char* pipeline_str = "gdiscreencapsrc ! videoconvert ! video/x-raw,format=BGRx ! appsink name=sink";
     pipeline = gst_parse_launch(pipeline_str, nullptr);
 
     if (!pipeline) {
