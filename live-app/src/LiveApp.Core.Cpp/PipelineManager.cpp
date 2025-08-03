@@ -198,6 +198,27 @@ void PipelineManager::StartPipeline(const std::string& id) {
     }
 }
 
+void PipelineManager::StartRecording(const std::string& filePath) {
+    if (compositorPipeline) {
+        GstElement* filesink = gst_bin_get_by_name(GST_BIN(compositorPipeline), "mux");
+        if (filesink) {
+            g_object_set(filesink, "location", filePath.c_str(), NULL);
+            gst_element_set_state(filesink, GST_STATE_PLAYING);
+            gst_object_unref(filesink);
+        }
+    }
+}
+
+void PipelineManager::StopRecording() {
+    if (compositorPipeline) {
+        GstElement* filesink = gst_bin_get_by_name(GST_BIN(compositorPipeline), "mux");
+        if (filesink) {
+            gst_element_set_state(filesink, GST_STATE_NULL);
+            gst_object_unref(filesink);
+        }
+    }
+}
+
 std::vector<std::vector<guint8>> PipelineManager::GenerateTransitionPreview(TransitionType type, int& width, int& height) {
     std::vector<std::vector<guint8>> frames;
     width = 320;
@@ -246,7 +267,7 @@ void PipelineManager::SetAsPreview(const std::string& id) {
 
 void PipelineManager::LinkSourceToCompositor(const std::string& id) {
     if (compositorPipeline == nullptr) {
-        std::string pipeline_str = "compositor name=comp ! videoconvert ! video/x-raw,format=BGRx ! appsink name=program audiomixer name=mix ! audioconvert ! audioresample ! autoaudiosink";
+        std::string pipeline_str = "compositor name=comp ! tee name=t ! queue ! videoconvert ! video/x-raw,format=BGRx ! appsink name=program t. ! queue ! x264enc ! mp4mux name=mux ! filesink location=test.mp4 audiomixer name=mix ! audioconvert ! audioresample ! mux.";
         compositorPipeline = gst_parse_launch(pipeline_str.c_str(), nullptr);
 
         GstElement* sink = gst_bin_get_by_name(GST_BIN(compositorPipeline), "program");

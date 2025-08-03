@@ -36,6 +36,8 @@ public:
     void SetSourceVolume(const std::string& id, double volume);
     void SetSourceMute(const std::string& id, bool mute);
     void Transition();
+    void StartRecording(const std::string& filePath);
+    void StopRecording();
     void GetLatestFrame(const std::string& id, std::vector<guint8>& buffer, int& width, int& height);
     std::vector<std::vector<guint8>> GenerateTransitionPreview(TransitionType type, int& width, int& height);
 

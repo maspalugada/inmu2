@@ -106,6 +106,20 @@ namespace LiveAppCore {
         }
     }
 
+    void CoreFunctions::StartRecording(System::String^ filePath) {
+        if (pipelineManager) {
+            msclr::interop::marshal_context context;
+            const char* path = context.marshal_as<const char*>(filePath);
+            pipelineManager->StartRecording(path);
+        }
+    }
+
+    void CoreFunctions::StopRecording() {
+        if (pipelineManager) {
+            pipelineManager->StopRecording();
+        }
+    }
+
     array<System::Byte, 2>^ CoreFunctions::GenerateTransitionPreview(TransitionType type, int% width, int% height) {
         if (pipelineManager) {
             int w, h;

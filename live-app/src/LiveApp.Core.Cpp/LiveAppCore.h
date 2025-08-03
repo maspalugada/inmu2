@@ -28,6 +28,8 @@ namespace LiveAppCore {
         };
         void SetTransitionType(TransitionType type);
         void Transition();
+        void StartRecording(System::String^ filePath);
+        void StopRecording();
         array<System::Byte, 2>^ GenerateTransitionPreview(TransitionType type, int% width, int% height);
         array<System::Byte>^ GetLatestFrame(System::String^ id, int% width, int% height);
 

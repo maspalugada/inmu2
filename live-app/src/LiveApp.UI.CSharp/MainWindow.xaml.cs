@@ -406,5 +406,20 @@ namespace LiveApp.UI.CSharp
             draggedSource = null;
             (sender as UIElement).ReleaseMouseCapture();
         }
+
+        private void StartRecording_Click(object sender, RoutedEventArgs e)
+        {
+            var saveFileDialog = new Microsoft.Win32.SaveFileDialog();
+            saveFileDialog.Filter = "MP4 File (*.mp4)|*.mp4";
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                coreFunctions.StartRecording(saveFileDialog.FileName);
+            }
+        }
+
+        private void StopRecording_Click(object sender, RoutedEventArgs e)
+        {
+            coreFunctions.StopRecording();
+        }
     }
 }
