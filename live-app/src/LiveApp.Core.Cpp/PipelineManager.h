@@ -39,6 +39,13 @@ public:
     void StartRecording(const std::string& filePath);
     void StopRecording();
     void UpdateSourceProperties(const std::string& id, const std::string& deviceName, const std::string& capability);
+
+    enum class FilterType {
+        Grayscale
+    };
+    void AddFilter(const std::string& id, FilterType type);
+    void RemoveFilter(const std::string& id);
+
     void GetLatestFrame(const std::string& id, std::vector<guint8>& buffer, int& width, int& height);
     std::vector<std::vector<guint8>> GenerateTransitionPreview(TransitionType type, int& width, int& height);
     std::vector<std::string> GetVideoDevices();

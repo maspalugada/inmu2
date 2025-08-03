@@ -114,7 +114,7 @@ void PipelineManager::GetLatestFrame(const std::string& id, std::vector<guint8>&
 }
 
 bool PipelineManager::CreateWebcamPipeline(const std::string& id) {
-    std::string pipeline_str = "ksvideosrc ! tee name=t ! queue ! videoconvert ! video/x-raw,format=BGRx ! appsink name=" + id + " t. ! queue ! audioconvert ! audioresample ! level name=level_" + id + " ! appsink name=audio_" + id;
+    std::string pipeline_str = "ksvideosrc ! identity name=filter_" + id + " ! tee name=t ! queue ! videoconvert ! video/x-raw,format=BGRx ! appsink name=" + id + " t. ! queue ! audioconvert ! audioresample ! level name=level_" + id + " ! appsink name=audio_" + id;
     pipelines[id].pipeline = gst_parse_launch(pipeline_str.c_str(), nullptr);
     if (!pipelines[id].pipeline) return false;
 
@@ -140,7 +140,7 @@ bool PipelineManager::CreateWebcamPipeline(const std::string& id) {
 }
 
 bool PipelineManager::CreateScreenCapturePipeline(const std::string& id) {
-    std::string pipeline_str = "gdiscreencapsrc ! videoconvert ! video/x-raw,format=BGRx ! appsink name=" + id + " wasapisrc ! audioconvert ! audioresample ! level name=level_" + id + " ! appsink name=audio_" + id;
+    std::string pipeline_str = "gdiscreencapsrc ! identity name=filter_" + id + " ! videoconvert ! video/x-raw,format=BGRx ! appsink name=" + id + " wasapisrc ! audioconvert ! audioresample ! level name=level_" + id + " ! appsink name=audio_" + id;
     pipelines[id].pipeline = gst_parse_launch(pipeline_str.c_str(), nullptr);
     if (!pipelines[id].pipeline) return false;
 
@@ -166,7 +166,7 @@ bool PipelineManager::CreateScreenCapturePipeline(const std::string& id) {
 }
 
 bool PipelineManager::CreateVideoFilePipeline(const std::string& id, const std::string& filePath) {
-    std::string pipeline_str = "filesrc location=\"" + filePath + "\" ! decodebin name=d d. ! queue ! videoconvert ! video/x-raw,format=BGRx ! appsink name=" + id + " d. ! queue ! audioconvert ! audioresample ! level name=level_" + id + " ! appsink name=audio_" + id;
+    std::string pipeline_str = "filesrc location=\"" + filePath + "\" ! decodebin name=d d. ! queue ! videoconvert ! identity name=filter_" + id + " ! video/x-raw,format=BGRx ! appsink name=" + id + " d. ! queue ! audioconvert ! audioresample ! level name=level_" + id + " ! appsink name=audio_" + id;
     pipelines[id].pipeline = gst_parse_launch(pipeline_str.c_str(), nullptr);
     if (!pipelines[id].pipeline) return false;
 
@@ -301,6 +301,87 @@ std::vector<std::string> PipelineManager::GetDeviceCapabilities(const std::strin
     gst_device_monitor_stop(monitor);
     gst_object_unref(monitor);
     return capabilities;
+}
+
+void PipelineManager::AddFilter(const std::string& id, FilterType type) {
+    auto it = pipelines.find(id);
+    if (it != pipelines.end()) {
+        gst_element_set_state(it->second.pipeline, GST_STATE_NULL);
+
+        GstElement* filter = gst_bin_get_by_name(GST_BIN(it->second.pipeline), ("filter_" + id).c_str());
+        if (filter) {
+            GstElement* new_filter = nullptr;
+            switch (type) {
+                case FilterType::Grayscale:
+                    new_filter = gst_element_factory_make("videobalance", nullptr);
+                    g_object_set(new_filter, "saturation", 0.0, NULL);
+                    break;
+            }
+
+            if (new_filter) {
+                GstPad* sinkpad = gst_element_get_static_pad(filter, "sink");
+                GstPad* srcpad = gst_element_get_static_pad(filter, "src");
+
+                GstPad* new_sinkpad = gst_element_get_static_pad(new_filter, "sink");
+                GstPad* new_srcpad = gst_element_get_static_pad(new_filter, "src");
+
+                gst_pad_unlink(gst_pad_get_peer(sinkpad), sinkpad);
+                gst_pad_unlink(srcpad, gst_pad_get_peer(srcpad));
+
+                gst_element_add_property_deep_notify_signal(GST_BIN(it->second.pipeline), ("filter_" + id).c_str(), filter, nullptr);
+                gst_bin_remove(GST_BIN(it->second.pipeline), filter);
+                gst_bin_add(GST_BIN(it->second.pipeline), new_filter);
+                gst_element_set_name(new_filter, ("filter_" + id).c_str());
+
+                gst_pad_link(gst_pad_get_peer(sinkpad), new_sinkpad);
+                gst_pad_link(new_srcpad, gst_pad_get_peer(srcpad));
+
+                gst_object_unref(sinkpad);
+                gst_object_unref(srcpad);
+                gst_object_unref(new_sinkpad);
+                gst_object_unref(new_srcpad);
+            }
+        }
+
+        gst_element_set_state(it->second.pipeline, GST_STATE_PLAYING);
+    }
+}
+
+void PipelineManager::RemoveFilter(const std::string& id) {
+    auto it = pipelines.find(id);
+    if (it != pipelines.end()) {
+        gst_element_set_state(it->second.pipeline, GST_STATE_NULL);
+
+        GstElement* filter = gst_bin_get_by_name(GST_BIN(it->second.pipeline), ("filter_" + id).c_str());
+        if (filter) {
+            GstElement* new_filter = gst_element_factory_make("identity", nullptr);
+            if (new_filter) {
+                GstPad* sinkpad = gst_element_get_static_pad(filter, "sink");
+                GstPad* srcpad = gst_element_get_static_pad(filter, "src");
+
+                GstPad* new_sinkpad = gst_element_get_static_pad(new_filter, "sink");
+                GstPad* new_srcpad = gst_element_get_static_pad(new_filter, "src");
+
+                gst_pad_unlink(gst_pad_get_peer(sinkpad), sinkpad);
+                gst_pad_unlink(srcpad, gst_pad_get_peer(srcpad));
+
+                gst_element_add_property_deep_notify_signal(GST_BIN(it->second.pipeline), ("filter_" + id).c_str(), filter, nullptr);
+                gst_bin_remove(GST_BIN(it->second.pipeline), filter);
+                gst_bin_add(GST_BIN(it->second.pipeline), new_filter);
+                gst_element_set_name(new_filter, ("filter_" + id).c_str());
+
+                gst_pad_link(gst_pad_get_peer(sinkpad), new_sinkpad);
+                gst_pad_link(new_srcpad, gst_pad_get_peer(srcpad));
+
+                gst_object_unref(sinkpad);
+                gst_object_unref(srcpad);
+                gst_object_unref(new_sinkpad);
+                gst_object_unref(new_srcpad);
+            }
+        }
+
+        gst_element_set_state(it->second.pipeline, GST_STATE_PLAYING);
+    }
 }
 
 void PipelineManager::UpdateSourceProperties(const std::string& id, const std::string& deviceName, const std::string& capability) {

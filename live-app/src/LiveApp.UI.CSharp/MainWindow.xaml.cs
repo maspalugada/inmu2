@@ -386,7 +386,7 @@ namespace LiveApp.UI.CSharp
         {
             if (SourcesListBox.SelectedItem is Source selectedSource)
             {
-                var dialog = new SourcePropertiesDialog(coreFunctions);
+                var dialog = new SourcePropertiesDialog(coreFunctions, selectedSource.Id);
                 if (dialog.ShowDialog() == true)
                 {
                     coreFunctions.UpdateSourceProperties(selectedSource.Id, dialog.SelectedDevice, dialog.SelectedCapability);

@@ -130,6 +130,18 @@ namespace LiveAppCore {
         }
     }
 
+    void CoreFunctions::AddFilter(System::String^ id, FilterType type) {
+        if (pipelineManager) {
+            pipelineManager->AddFilter(msclr::interop::marshal_as<std::string>(id), (PipelineManager::FilterType)type);
+        }
+    }
+
+    void CoreFunctions::RemoveFilter(System::String^ id) {
+        if (pipelineManager) {
+            pipelineManager->RemoveFilter(msclr::interop::marshal_as<std::string>(id));
+        }
+    }
+
     array<System::Byte, 2>^ CoreFunctions::GenerateTransitionPreview(TransitionType type, int% width, int% height) {
         if (pipelineManager) {
             int w, h;

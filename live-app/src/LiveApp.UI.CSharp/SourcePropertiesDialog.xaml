@@ -12,6 +12,12 @@
             <ComboBox x:Name="DeviceComboBox" SelectionChanged="DeviceComboBox_SelectionChanged"/>
             <TextBlock Text="Capabilities:"/>
             <ComboBox x:Name="CapabilitiesComboBox"/>
+            <TextBlock Text="Filters:" Margin="0,10,0,0"/>
+            <ListBox x:Name="FiltersListBox" Height="100"/>
+            <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                <Button Content="Add" Click="AddFilter_Click"/>
+                <Button Content="Remove" Click="RemoveFilter_Click" Margin="5,0,0,0"/>
+            </StackPanel>
             <Button Content="OK" Click="OK_Click" Margin="0,10,0,0"/>
             <Button Content="Cancel" Click="Cancel_Click" Margin="0,5,0,0"/>
         </StackPanel>

@@ -11,10 +11,13 @@ namespace LiveApp.UI.CSharp
         public string SelectedDevice { get; private set; }
         public string SelectedCapability { get; private set; }
 
-        public SourcePropertiesDialog(CoreFunctions core)
+        private string sourceId;
+
+        public SourcePropertiesDialog(CoreFunctions core, string id)
         {
             InitializeComponent();
             coreFunctions = core;
+            sourceId = id;
             PopulateDeviceComboBox();
         }
 
@@ -37,12 +40,40 @@ namespace LiveApp.UI.CSharp
         {
             SelectedDevice = DeviceComboBox.SelectedItem as string;
             SelectedCapability = CapabilitiesComboBox.SelectedItem as string;
+
+            // This is a simplified implementation. A real implementation would
+            // keep track of the filters that have been added and removed.
+            foreach (var item in FiltersListBox.Items)
+            {
+                if (item is CoreFunctions.FilterType filterType)
+                {
+                    coreFunctions.AddFilter(sourceId, filterType);
+                }
+            }
+
             DialogResult = true;
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = false;
+        }
+
+        private void AddFilter_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new AddFilterDialog();
+            if (dialog.ShowDialog() == true)
+            {
+                FiltersListBox.Items.Add(dialog.SelectedFilter);
+            }
+        }
+
+        private void RemoveFilter_Click(object sender, RoutedEventArgs e)
+        {
+            if (FiltersListBox.SelectedItem != null)
+            {
+                FiltersListBox.Items.Remove(FiltersListBox.SelectedItem);
+            }
         }
     }
 }

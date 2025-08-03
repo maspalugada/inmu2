@@ -31,6 +31,13 @@ namespace LiveAppCore {
         void StartRecording(System::String^ filePath);
         void StopRecording();
         void UpdateSourceProperties(System::String^ id, System::String^ deviceName, System::String^ capability);
+
+        enum class FilterType {
+            Grayscale
+        };
+        void AddFilter(System::String^ id, FilterType type);
+        void RemoveFilter(System::String^ id);
+
         array<System::Byte, 2>^ GenerateTransitionPreview(TransitionType type, int% width, int% height);
         array<System::Byte>^ GetLatestFrame(System::String^ id, int% width, int% height);
 
