@@ -10,13 +10,55 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="150"/>
         </Grid.RowDefinitions>
-        <Image x:Name="WebcamImage" Grid.Row="0"/>
+
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border BorderBrush="Gray" BorderThickness="1" Margin="5">
+                <Canvas>
+                    <Image x:Name="PreviewImage" MouseLeftButtonDown="PreviewImage_MouseLeftButtonDown" MouseMove="PreviewImage_MouseMove" MouseLeftButtonUp="PreviewImage_MouseLeftButtonUp"/>
+                </Canvas>
+            </Border>
+
+            <Button Content="Transition" Grid.Column="1" VerticalAlignment="Center" Margin="10" Click="Transition_Click"/>
+
+            <Border BorderBrush="Red" BorderThickness="2" Grid.Column="2" Margin="5">
+                <Image x:Name="ProgramImage" />
+            </Border>
+        </Grid>
+
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
-            <Button Content="Start Webcam" Click="StartWebcam_Click" Margin="5"/>
-            <Button Content="Start Screen Capture" Click="StartScreenCapture_Click" Margin="5"/>
-            <Button Content="Open Video File" Click="OpenVideoFile_Click" Margin="5"/>
-            <Button Content="Stop" Click="Stop_Click" Margin="5"/>
+            <Button Content="Add Webcam" Click="AddWebcam_Click" Margin="5"/>
+            <Button Content="Add Screen Capture" Click="AddScreenCapture_Click" Margin="5"/>
+            <Button Content="Add Video File" Click="AddVideoFile_Click" Margin="5"/>
+            <Button Content="Remove Source" Click="RemoveSource_Click" Margin="5"/>
         </StackPanel>
+
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <GroupBox Header="Scenes" Margin="5">
+                <Grid>
+                    <ListBox x:Name="ScenesListBox" SelectionChanged="ScenesListBox_SelectionChanged"/>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
+                        <Button Content="Add" Click="AddScene_Click"/>
+                        <Button Content="Remove" Click="RemoveScene_Click"/>
+                    </StackPanel>
+                </Grid>
+            </GroupBox>
+
+            <GroupBox Header="Sources" Grid.Column="1" Margin="5">
+                <ListBox x:Name="SourcesListBox" SelectionChanged="SourcesListBox_SelectionChanged"/>
+            </GroupBox>
+        </Grid>
     </Grid>
 </Window>
