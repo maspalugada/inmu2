@@ -39,6 +39,7 @@ private:
     static GstFlowReturn OnNewSample(GstElement* sink, PipelineManager* manager);
 
     std::map<std::string, PipelineWrapper> pipelines;
+    std::map<std::string, GstPad*> compositorPads;
     std::string previewId;
     GstElement* compositorPipeline = nullptr;
     FrameCallback frameCallback;

@@ -38,8 +38,48 @@ namespace LiveApp.UI.CSharp
 
     public partial class MainWindow : Window
     {
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using LiveAppCore;
+
+namespace LiveApp.UI.CSharp
+{
+    public class Source : INotifyPropertyChanged
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+        private double x;
+        public double X { get { return x; } set { x = value; OnPropertyChanged(nameof(X)); } }
+        private double y;
+        public double Y { get { return y; } set { y = value; OnPropertyChanged(nameof(Y)); } }
+        public double Width { get; set; } = 320;
+        public double Height { get; set; } = 240;
+        private WriteableBitmap bitmap;
+        public WriteableBitmap Bitmap { get { return bitmap; } set { bitmap = value; OnPropertyChanged(nameof(Bitmap)); } }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged(string name)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        }
+    }
+
+    public class Scene
+    {
+        public string Name { get; set; }
+        public ObservableCollection<Source> Sources { get; set; } = new ObservableCollection<Source>();
+    }
+
+    public partial class MainWindow : Window
+    {
         private CoreFunctions coreFunctions;
-        private string programId;
+        private WriteableBitmap programBitmap;
         private bool isRendering = false;
 
         private ObservableCollection<Scene> scenes = new ObservableCollection<Scene>();
@@ -85,31 +125,47 @@ namespace LiveApp.UI.CSharp
             if (frameData == null || width == 0 || height == 0)
                 return;
 
-            Source sourceToUpdate = null;
-            foreach (var scene in scenes)
+            if (id == "program")
             {
-                foreach (var source in scene.Sources)
+                if (programBitmap == null || programBitmap.Width != width || programBitmap.Height != height)
                 {
-                    if (source.Id == id)
-                    {
-                        sourceToUpdate = source;
-                        break;
-                    }
+                    programBitmap = new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgr32, null);
+                    ProgramImage.Source = programBitmap;
                 }
-                if (sourceToUpdate != null) break;
+
+                programBitmap.Lock();
+                System.Runtime.InteropServices.Marshal.Copy(frameData, 0, programBitmap.BackBuffer, frameData.Length);
+                programBitmap.AddDirtyRect(new Int32Rect(0, 0, width, height));
+                programBitmap.Unlock();
             }
-
-            if (sourceToUpdate != null)
+            else
             {
-                if (sourceToUpdate.Bitmap == null || sourceToUpdate.Bitmap.Width != width || sourceToUpdate.Bitmap.Height != height)
+                Source sourceToUpdate = null;
+                foreach (var scene in scenes)
                 {
-                    sourceToUpdate.Bitmap = new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgr32, null);
+                    foreach (var source in scene.Sources)
+                    {
+                        if (source.Id == id)
+                        {
+                            sourceToUpdate = source;
+                            break;
+                        }
+                    }
+                    if (sourceToUpdate != null) break;
                 }
 
-                sourceToUpdate.Bitmap.Lock();
-                System.Runtime.InteropServices.Marshal.Copy(frameData, 0, sourceToUpdate.Bitmap.BackBuffer, frameData.Length);
-                sourceToUpdate.Bitmap.AddDirtyRect(new Int32Rect(0, 0, width, height));
-                sourceToUpdate.Bitmap.Unlock();
+                if (sourceToUpdate != null)
+                {
+                    if (sourceToUpdate.Bitmap == null || sourceToUpdate.Bitmap.Width != width || sourceToUpdate.Bitmap.Height != height)
+                    {
+                        sourceToUpdate.Bitmap = new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgr32, null);
+                    }
+
+                    sourceToUpdate.Bitmap.Lock();
+                    System.Runtime.InteropServices.Marshal.Copy(frameData, 0, sourceToUpdate.Bitmap.BackBuffer, frameData.Length);
+                    sourceToUpdate.Bitmap.AddDirtyRect(new Int32Rect(0, 0, width, height));
+                    sourceToUpdate.Bitmap.Unlock();
+                }
             }
         }
 
@@ -196,7 +252,7 @@ namespace LiveApp.UI.CSharp
 
         private void Transition_Click(object sender, RoutedEventArgs e)
         {
-            // This needs to be re-thought with the new compositor logic
+            coreFunctions.Transition();
         }
 
         private bool isDragging = false;
