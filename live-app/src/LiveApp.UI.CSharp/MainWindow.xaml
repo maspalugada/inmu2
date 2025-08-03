@@ -15,6 +15,7 @@
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
             <Button Content="Start Webcam" Click="StartWebcam_Click" Margin="5"/>
             <Button Content="Start Screen Capture" Click="StartScreenCapture_Click" Margin="5"/>
+            <Button Content="Open Video File" Click="OpenVideoFile_Click" Margin="5"/>
             <Button Content="Stop" Click="Stop_Click" Margin="5"/>
         </StackPanel>
     </Grid>

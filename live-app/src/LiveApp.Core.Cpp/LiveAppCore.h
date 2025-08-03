@@ -13,6 +13,7 @@ namespace LiveAppCore {
 
         void StartWebcam();
         void StartScreenCapture();
+        void StartVideoFile(System::String^ filePath);
         void Stop();
         array<System::Byte>^ GetLatestFrame(int% width, int% height);
 

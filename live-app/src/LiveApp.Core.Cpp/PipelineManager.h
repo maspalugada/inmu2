@@ -14,6 +14,7 @@ public:
 
     bool CreateWebcamPipeline();
     bool CreateScreenCapturePipeline();
+    bool CreateVideoFilePipeline(const std::string& filePath);
     void StartPipeline();
     void StopPipeline();
 

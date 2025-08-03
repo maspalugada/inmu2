@@ -76,6 +76,16 @@ namespace LiveApp.UI.CSharp
             coreFunctions.StartScreenCapture();
         }
 
+        private void OpenVideoFile_Click(object sender, RoutedEventArgs e)
+        {
+            var openFileDialog = new Microsoft.Win32.OpenFileDialog();
+            openFileDialog.Filter = "Video Files (*.mp4, *.mov, *.avi)|*.mp4;*.mov;*.avi|All files (*.*)|*.*";
+            if (openFileDialog.ShowDialog() == true)
+            {
+                coreFunctions.StartVideoFile(openFileDialog.FileName);
+            }
+        }
+
         private void Stop_Click(object sender, RoutedEventArgs e)
         {
             coreFunctions.Stop();

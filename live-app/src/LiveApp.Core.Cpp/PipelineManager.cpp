@@ -65,6 +65,24 @@ bool PipelineManager::CreateWebcamPipeline() {
     return true;
 }
 
+bool PipelineManager::CreateVideoFilePipeline(const std::string& filePath) {
+    std::string pipeline_str = "filesrc location=\"" + filePath + "\" ! decodebin ! videoconvert ! video/x-raw,format=BGRx ! appsink name=sink";
+    pipeline = gst_parse_launch(pipeline_str.c_str(), nullptr);
+
+    if (!pipeline) {
+        return false;
+    }
+
+    GstElement* sink = gst_bin_get_by_name(GST_BIN(pipeline), "sink");
+    if (sink) {
+        g_object_set(sink, "emit-signals", TRUE, "sync", FALSE, NULL);
+        g_signal_connect(sink, "new-sample", G_CALLBACK(OnNewSample), this);
+        gst_object_unref(sink);
+    }
+
+    return true;
+}
+
 bool PipelineManager::CreateScreenCapturePipeline() {
     const char* pipeline_str = "gdiscreencapsrc ! videoconvert ! video/x-raw,format=BGRx ! appsink name=sink";
     pipeline = gst_parse_launch(pipeline_str, nullptr);

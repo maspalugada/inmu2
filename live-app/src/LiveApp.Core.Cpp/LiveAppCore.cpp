@@ -24,6 +24,16 @@ namespace LiveAppCore {
         }
     }
 
+    void CoreFunctions::StartVideoFile(System::String^ filePath) {
+        if (pipelineManager) {
+            msclr::interop::marshal_context context;
+            const char* path = context.marshal_as<const char*>(filePath);
+            if (pipelineManager->CreateVideoFilePipeline(path)) {
+                pipelineManager->StartPipeline();
+            }
+        }
+    }
+
     void CoreFunctions::StartScreenCapture() {
         if (pipelineManager) {
             if (pipelineManager->CreateScreenCapturePipeline()) {
