@@ -303,6 +303,21 @@ std::vector<std::string> PipelineManager::GetDeviceCapabilities(const std::strin
     return capabilities;
 }
 
+void PipelineManager::SetTextOverlay(const std::string& text, const std::string& font, int size, int color, int x, int y) {
+    if (compositorPipeline) {
+        GstElement* text_overlay = gst_bin_get_by_name(GST_BIN(compositorPipeline), "text_overlay");
+        if (text_overlay) {
+            g_object_set(text_overlay, "text", text.c_str(), NULL);
+            g_object_set(text_overlay, "font-desc", (font + ", " + std::to_string(size)).c_str(), NULL);
+            g_object_set(text_overlay, "valignment", 0, "halignment", 0, "xpos", x, "ypos", y, NULL);
+            // The color property is a guint. We need to convert the hex color to a guint.
+            // This is a simplified implementation that assumes a 32-bit RGBA color.
+            g_object_set(text_overlay, "color", color, NULL);
+            gst_object_unref(text_overlay);
+        }
+    }
+}
+
 void PipelineManager::AddFilter(const std::string& id, FilterType type) {
     auto it = pipelines.find(id);
     if (it != pipelines.end()) {
@@ -414,7 +429,7 @@ void PipelineManager::SetAsPreview(const std::string& id) {
 
 void PipelineManager::LinkSourceToCompositor(const std::string& id) {
     if (compositorPipeline == nullptr) {
-        std::string pipeline_str = "compositor name=comp ! tee name=t ! queue ! videoconvert ! video/x-raw,format=BGRx ! appsink name=program t. ! queue ! x264enc ! mp4mux name=mux ! filesink location=test.mp4 audiomixer name=mix ! audioconvert ! audioresample ! mux.";
+        std::string pipeline_str = "compositor name=comp ! textoverlay name=text_overlay ! tee name=t ! queue ! videoconvert ! video/x-raw,format=BGRx ! appsink name=program t. ! queue ! x264enc ! mp4mux name=mux ! filesink location=test.mp4 audiomixer name=mix ! audioconvert ! audioresample ! mux.";
         compositorPipeline = gst_parse_launch(pipeline_str.c_str(), nullptr);
 
         GstElement* sink = gst_bin_get_by_name(GST_BIN(compositorPipeline), "program");

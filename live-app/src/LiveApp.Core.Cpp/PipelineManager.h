@@ -46,6 +46,8 @@ public:
     void AddFilter(const std::string& id, FilterType type);
     void RemoveFilter(const std::string& id);
 
+    void SetTextOverlay(const std::string& text, const std::string& font, int size, int color, int x, int y);
+
     void GetLatestFrame(const std::string& id, std::vector<guint8>& buffer, int& width, int& height);
     std::vector<std::vector<guint8>> GenerateTransitionPreview(TransitionType type, int& width, int& height);
     std::vector<std::string> GetVideoDevices();

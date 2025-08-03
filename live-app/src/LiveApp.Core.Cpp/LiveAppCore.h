@@ -38,6 +38,8 @@ namespace LiveAppCore {
         void AddFilter(System::String^ id, FilterType type);
         void RemoveFilter(System::String^ id);
 
+        void SetTextOverlay(System::String^ text, System::String^ font, int size, int color, int x, int y);
+
         array<System::Byte, 2>^ GenerateTransitionPreview(TransitionType type, int% width, int% height);
         array<System::Byte>^ GetLatestFrame(System::String^ id, int% width, int% height);
 

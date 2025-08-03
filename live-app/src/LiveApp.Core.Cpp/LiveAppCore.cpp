@@ -142,6 +142,19 @@ namespace LiveAppCore {
         }
     }
 
+    void CoreFunctions::SetTextOverlay(System::String^ text, System::String^ font, int size, int color, int x, int y) {
+        if (pipelineManager) {
+            pipelineManager->SetTextOverlay(
+                msclr::interop::marshal_as<std::string>(text),
+                msclr::interop::marshal_as<std::string>(font),
+                size,
+                color,
+                x,
+                y
+            );
+        }
+    }
+
     array<System::Byte, 2>^ CoreFunctions::GenerateTransitionPreview(TransitionType type, int% width, int% height) {
         if (pipelineManager) {
             int w, h;

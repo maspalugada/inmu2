@@ -67,6 +67,7 @@ namespace LiveApp.UI.CSharp
 
             ScenesListBox.ItemsSource = scenes;
             AddScene_Click(null, null);
+            FontComboBox.ItemsSource = Fonts.SystemFontFamilies;
         }
 
         private void OnAudioLevel(string id, double level)
@@ -392,6 +393,50 @@ namespace LiveApp.UI.CSharp
                     coreFunctions.UpdateSourceProperties(selectedSource.Id, dialog.SelectedDevice, dialog.SelectedCapability);
                 }
             }
+        }
+
+        private void UpdateTextOverlay()
+        {
+            if (coreFunctions != null)
+            {
+                int x = 0, y = 0;
+                int.TryParse(XPosTextBox.Text, out x);
+                int.TryParse(YPosTextBox.Text, out y);
+
+                coreFunctions.SetTextOverlay(
+                    TextOverlayTextBox.Text,
+                    (FontComboBox.SelectedItem as FontFamily)?.Source,
+                    (int)FontSizeSlider.Value,
+                    (ColorPicker.SelectedColor.HasValue ? (ColorPicker.SelectedColor.Value.R << 24) | (ColorPicker.SelectedColor.Value.G << 16) | (ColorPicker.SelectedColor.Value.B << 8) | 0xFF : 0xFFFFFFFF),
+                    x,
+                    y
+                );
+            }
+        }
+
+        private void TextOverlay_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            UpdateTextOverlay();
+        }
+
+        private void FontComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            UpdateTextOverlay();
+        }
+
+        private void FontSizeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            UpdateTextOverlay();
+        }
+
+        private void ColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<Color?> e)
+        {
+            UpdateTextOverlay();
+        }
+
+        private void Position_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            UpdateTextOverlay();
         }
     }
 }

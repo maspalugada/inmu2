@@ -11,6 +11,7 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="150"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <Grid Grid.Row="0">
@@ -104,5 +105,41 @@
                 </ListBox>
             </GroupBox>
         </Grid>
+
+        <GroupBox Header="Text Overlay" Grid.Row="3" Margin="5">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="Text:" Grid.Row="0" Grid.Column="0" Margin="5"/>
+                <TextBox x:Name="TextOverlayTextBox" Grid.Row="0" Grid.Column="1" Margin="5" TextChanged="TextOverlay_TextChanged"/>
+
+                <TextBlock Text="Font:" Grid.Row="1" Grid.Column="0" Margin="5"/>
+                <ComboBox x:Name="FontComboBox" Grid.Row="1" Grid.Column="1" Margin="5" SelectionChanged="FontComboBox_SelectionChanged"/>
+
+                <TextBlock Text="Size:" Grid.Row="2" Grid.Column="0" Margin="5"/>
+                <Slider x:Name="FontSizeSlider" Grid.Row="2" Grid.Column="1" Margin="5" Minimum="10" Maximum="100" Value="24" ValueChanged="FontSizeSlider_ValueChanged"/>
+
+                <TextBlock Text="Color:" Grid.Row="3" Grid.Column="0" Margin="5"/>
+                <xctk:ColorPicker x:Name="ColorPicker" Grid.Row="3" Grid.Column="1" Margin="5" SelectedColorChanged="ColorPicker_SelectedColorChanged"/>
+
+                <TextBlock Text="Position:" Grid.Row="4" Grid.Column="0" Margin="5"/>
+                <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="1" Margin="5">
+                    <TextBlock Text="X:"/>
+                    <TextBox x:Name="XPosTextBox" Width="50" Text="0" TextChanged="Position_TextChanged"/>
+                    <TextBlock Text="Y:" Margin="10,0,0,0"/>
+                    <TextBox x:Name="YPosTextBox" Width="50" Text="0" TextChanged="Position_TextChanged"/>
+                </StackPanel>
+            </Grid>
+        </GroupBox>
     </Grid>
 </Window>
