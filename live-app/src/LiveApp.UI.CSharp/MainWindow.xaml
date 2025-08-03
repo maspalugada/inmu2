@@ -43,6 +43,9 @@
                     <ComboBoxItem Content="Fade"/>
                 </ComboBox>
                 <Button Content="Transition" Margin="5" Click="Transition_Click"/>
+                <Border BorderBrush="Gray" BorderThickness="1" Margin="5" Height="100">
+                    <Image x:Name="TransitionPreviewImage"/>
+                </Border>
             </StackPanel>
 
             <Border BorderBrush="Red" BorderThickness="2" Grid.Column="2" Margin="5">

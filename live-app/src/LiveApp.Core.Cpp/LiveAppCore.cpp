@@ -103,6 +103,29 @@ namespace LiveAppCore {
         }
     }
 
+    array<System::Byte, 2>^ CoreFunctions::GenerateTransitionPreview(TransitionType type, int% width, int% height) {
+        if (pipelineManager) {
+            int w, h;
+            std::vector<std::vector<guint8>> frames = pipelineManager->GenerateTransitionPreview((PipelineManager::TransitionType)type, w, h);
+            width = w;
+            height = h;
+
+            if (frames.empty()) {
+                return nullptr;
+            }
+
+            int frameSize = frames[0].size();
+            array<System::Byte, 2>^ result = gcnew array<System::Byte, 2>(frames.size(), frameSize);
+            for (int i = 0; i < frames.size(); ++i) {
+                for (int j = 0; j < frameSize; ++j) {
+                    result[i, j] = frames[i][j];
+                }
+            }
+            return result;
+        }
+        return nullptr;
+    }
+
     void CoreFunctions::FrameReady(const std::string& id) {
         OnFrameReady(msclr::interop::marshal_as<System::String^>(id));
     }

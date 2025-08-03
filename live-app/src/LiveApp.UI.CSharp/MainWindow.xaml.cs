@@ -282,20 +282,59 @@ namespace LiveApp.UI.CSharp
             coreFunctions.Transition();
         }
 
+        private System.Threading.Timer previewTimer;
+        private int previewFrameIndex;
+        private byte[,] previewFrames;
+        private int previewWidth, previewHeight;
+
         private void TransitionComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (TransitionComboBox.SelectedItem is ComboBoxItem selectedItem)
             {
+                LiveAppCore.CoreFunctions.TransitionType type;
                 switch (selectedItem.Content.ToString())
                 {
                     case "Cut":
-                        coreFunctions.SetTransitionType(LiveAppCore.CoreFunctions.TransitionType.Cut);
+                        type = LiveAppCore.CoreFunctions.TransitionType.Cut;
                         break;
                     case "Fade":
-                        coreFunctions.SetTransitionType(LiveAppCore.CoreFunctions.TransitionType.Fade);
+                        type = LiveAppCore.CoreFunctions.TransitionType.Fade;
                         break;
+                    default:
+                        return;
+                }
+                coreFunctions.SetTransitionType(type);
+
+                previewFrames = coreFunctions.GenerateTransitionPreview(type, ref previewWidth, ref previewHeight);
+                if (previewFrames != null)
+                {
+                    previewFrameIndex = 0;
+                    previewTimer?.Dispose();
+                    previewTimer = new System.Threading.Timer(DisplayPreviewFrame, null, 0, 33); // 30 fps
                 }
             }
+        }
+
+        private void DisplayPreviewFrame(object state)
+        {
+            if (previewFrames == null || previewFrameIndex >= previewFrames.GetLength(0))
+            {
+                previewTimer?.Dispose();
+                return;
+            }
+
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                var bitmap = new WriteableBitmap(previewWidth, previewHeight, 96, 96, PixelFormats.Bgr32, null);
+                byte[] frameData = new byte[previewFrames.GetLength(1)];
+                for (int i = 0; i < frameData.Length; i++)
+                {
+                    frameData[i] = previewFrames[previewFrameIndex, i];
+                }
+                bitmap.WritePixels(new Int32Rect(0, 0, previewWidth, previewHeight), frameData, previewWidth * 4, 0);
+                TransitionPreviewImage.Source = bitmap;
+                previewFrameIndex++;
+            }));
         }
 
         private bool isDragging = false;

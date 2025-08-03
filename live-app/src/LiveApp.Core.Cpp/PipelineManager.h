@@ -36,6 +36,7 @@ public:
     void SetSourceMute(const std::string& id, bool mute);
     void Transition();
     void GetLatestFrame(const std::string& id, std::vector<guint8>& buffer, int& width, int& height);
+    std::vector<std::vector<guint8>> GenerateTransitionPreview(TransitionType type, int& width, int& height);
 
 private:
     static GstFlowReturn OnNewSample(GstElement* sink, PipelineManager* manager);

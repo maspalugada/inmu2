@@ -169,6 +169,41 @@ void PipelineManager::StartPipeline(const std::string& id) {
     }
 }
 
+std::vector<std::vector<guint8>> PipelineManager::GenerateTransitionPreview(TransitionType type, int& width, int& height) {
+    std::vector<std::vector<guint8>> frames;
+    width = 320;
+    height = 240;
+
+    std::string pipeline_str = "videotestsrc pattern=ball ! video/x-raw,width=320,height=240 ! compositor name=comp ! videoconvert ! appsink name=preview_sink videotestsrc pattern=snow ! video/x-raw,width=320,height=240 ! comp.";
+    GstElement* preview_pipeline = gst_parse_launch(pipeline_str.c_str(), nullptr);
+
+    if (preview_pipeline) {
+        GstElement* sink = gst_bin_get_by_name(GST_BIN(preview_pipeline), "preview_sink");
+        if (sink) {
+            g_object_set(sink, "emit-signals", TRUE, "sync", FALSE, NULL);
+
+            // This is a simplified way to get frames. A real implementation would use a more robust mechanism.
+            for (int i = 0; i < 30; ++i) {
+                GstSample* sample = gst_app_sink_pull_sample(GST_APP_SINK(sink));
+                if (sample) {
+                    GstBuffer* buffer = gst_sample_get_buffer(sample);
+                    GstMapInfo map;
+                    if (gst_buffer_map(buffer, &map, GST_MAP_READ)) {
+                        frames.push_back(std::vector<guint8>(map.data, map.data + map.size));
+                        gst_buffer_unmap(buffer, &map);
+                    }
+                    gst_sample_unref(sample);
+                }
+            }
+            gst_object_unref(sink);
+        }
+        gst_element_set_state(preview_pipeline, GST_STATE_NULL);
+        gst_object_unref(preview_pipeline);
+    }
+
+    return frames;
+}
+
 void PipelineManager::StopPipeline(const std::string& id) {
     auto it = pipelines.find(id);
     if (it != pipelines.end()) {
