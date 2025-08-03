@@ -17,6 +17,8 @@ namespace LiveAppCore {
         void StopSource(System::String^ id);
         void SetAsPreview(System::String^ id);
         void UpdateSourcePosition(System::String^ id, int x, int y);
+        void SetSourceVolume(System::String^ id, double volume);
+        void SetSourceMute(System::String^ id, bool mute);
         void Transition();
         array<System::Byte>^ GetLatestFrame(System::String^ id, int% width, int% height);
 

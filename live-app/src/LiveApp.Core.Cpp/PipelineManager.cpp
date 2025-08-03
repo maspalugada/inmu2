@@ -13,6 +13,20 @@ PipelineManager::~PipelineManager() {
     }
 }
 
+void PipelineManager::SetSourceVolume(const std::string& id, double volume) {
+    auto it = compositorPads.find(id);
+    if (it != compositorPads.end()) {
+        g_object_set(it->second, "volume", volume, NULL);
+    }
+}
+
+void PipelineManager::SetSourceMute(const std::string& id, bool mute) {
+    auto it = compositorPads.find(id);
+    if (it != compositorPads.end()) {
+        g_object_set(it->second, "mute", mute, NULL);
+    }
+}
+
 GstFlowReturn PipelineManager::OnNewSample(GstElement* sink, PipelineManager* manager) {
     GstSample* sample = gst_app_sink_pull_sample(GST_APP_SINK(sink));
     if (sample) {
@@ -61,7 +75,7 @@ void PipelineManager::GetLatestFrame(const std::string& id, std::vector<guint8>&
 }
 
 bool PipelineManager::CreateWebcamPipeline(const std::string& id) {
-    std::string pipeline_str = "ksvideosrc ! videoconvert ! video/x-raw,format=BGRx ! appsink name=" + id;
+    std::string pipeline_str = "ksvideosrc ! tee name=t ! queue ! videoconvert ! video/x-raw,format=BGRx ! appsink name=" + id + " t. ! queue ! audioconvert ! audioresample ! appsink name=audio_" + id;
     pipelines[id].pipeline = gst_parse_launch(pipeline_str.c_str(), nullptr);
     if (!pipelines[id].pipeline) return false;
 
@@ -71,12 +85,19 @@ bool PipelineManager::CreateWebcamPipeline(const std::string& id) {
         g_signal_connect(sink, "new-sample", G_CALLBACK(OnNewSample), this);
         gst_object_unref(sink);
     }
+
+    GstElement* audio_sink = gst_bin_get_by_name(GST_BIN(pipelines[id].pipeline), ("audio_" + id).c_str());
+    if (audio_sink) {
+        // We don't need to do anything with the audio sink for now, but we need to make sure it exists.
+        gst_object_unref(audio_sink);
+    }
+
     LinkSourceToCompositor(id);
     return true;
 }
 
 bool PipelineManager::CreateScreenCapturePipeline(const std::string& id) {
-    std::string pipeline_str = "gdiscreencapsrc ! videoconvert ! video/x-raw,format=BGRx ! appsink name=" + id;
+    std::string pipeline_str = "gdiscreencapsrc ! videoconvert ! video/x-raw,format=BGRx ! appsink name=" + id + " wasapisrc ! audioconvert ! audioresample ! appsink name=audio_" + id;
     pipelines[id].pipeline = gst_parse_launch(pipeline_str.c_str(), nullptr);
     if (!pipelines[id].pipeline) return false;
 
@@ -86,12 +107,19 @@ bool PipelineManager::CreateScreenCapturePipeline(const std::string& id) {
         g_signal_connect(sink, "new-sample", G_CALLBACK(OnNewSample), this);
         gst_object_unref(sink);
     }
+
+    GstElement* audio_sink = gst_bin_get_by_name(GST_BIN(pipelines[id].pipeline), ("audio_" + id).c_str());
+    if (audio_sink) {
+        // We don't need to do anything with the audio sink for now, but we need to make sure it exists.
+        gst_object_unref(audio_sink);
+    }
+
     LinkSourceToCompositor(id);
     return true;
 }
 
 bool PipelineManager::CreateVideoFilePipeline(const std::string& id, const std::string& filePath) {
-    std::string pipeline_str = "filesrc location=\"" + filePath + "\" ! decodebin ! videoconvert ! video/x-raw,format=BGRx ! appsink name=" + id;
+    std::string pipeline_str = "filesrc location=\"" + filePath + "\" ! decodebin name=d d. ! queue ! videoconvert ! video/x-raw,format=BGRx ! appsink name=" + id + " d. ! queue ! audioconvert ! audioresample ! appsink name=audio_" + id;
     pipelines[id].pipeline = gst_parse_launch(pipeline_str.c_str(), nullptr);
     if (!pipelines[id].pipeline) return false;
 
@@ -101,6 +129,13 @@ bool PipelineManager::CreateVideoFilePipeline(const std::string& id, const std::
         g_signal_connect(sink, "new-sample", G_CALLBACK(OnNewSample), this);
         gst_object_unref(sink);
     }
+
+    GstElement* audio_sink = gst_bin_get_by_name(GST_BIN(pipelines[id].pipeline), ("audio_" + id).c_str());
+    if (audio_sink) {
+        // We don't need to do anything with the audio sink for now, but we need to make sure it exists.
+        gst_object_unref(audio_sink);
+    }
+
     LinkSourceToCompositor(id);
     return true;
 }
@@ -125,7 +160,7 @@ void PipelineManager::SetAsPreview(const std::string& id) {
 
 void PipelineManager::LinkSourceToCompositor(const std::string& id) {
     if (compositorPipeline == nullptr) {
-        std::string pipeline_str = "compositor name=comp ! videoconvert ! video/x-raw,format=BGRx ! appsink name=program";
+        std::string pipeline_str = "compositor name=comp ! videoconvert ! video/x-raw,format=BGRx ! appsink name=program audiomixer name=mix ! audioconvert ! audioresample ! autoaudiosink";
         compositorPipeline = gst_parse_launch(pipeline_str.c_str(), nullptr);
 
         GstElement* sink = gst_bin_get_by_name(GST_BIN(compositorPipeline), "program");
@@ -156,6 +191,24 @@ void PipelineManager::LinkSourceToCompositor(const std::string& id) {
                 }
             }
             gst_object_unref(compositor);
+        }
+
+        GstElement* audiomixer = gst_bin_get_by_name(GST_BIN(compositorPipeline), "mix");
+        if (audiomixer) {
+            GstPad* sinkpad = gst_element_request_pad_simple(audiomixer, "sink_%u");
+            if (sinkpad) {
+                GstElement* pipeline = it->second.pipeline;
+                GstElement* audio_source = gst_bin_get_by_name(GST_BIN(pipeline), ("audio_" + id).c_str());
+                if (audio_source) {
+                    GstPad* srcpad = gst_element_get_static_pad(audio_source, "src");
+                    if (srcpad) {
+                        gst_pad_link(srcpad, sinkpad);
+                        gst_object_unref(srcpad);
+                    }
+                    gst_object_unref(audio_source);
+                }
+            }
+            gst_object_unref(audiomixer);
         }
     }
 }

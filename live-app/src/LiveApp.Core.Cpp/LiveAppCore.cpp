@@ -79,6 +79,18 @@ namespace LiveAppCore {
         }
     }
 
+    void CoreFunctions::SetSourceVolume(System::String^ id, double volume) {
+        if (pipelineManager) {
+            pipelineManager->SetSourceVolume(msclr::interop::marshal_as<std::string>(id), volume);
+        }
+    }
+
+    void CoreFunctions::SetSourceMute(System::String^ id, bool mute) {
+        if (pipelineManager) {
+            pipelineManager->SetSourceMute(msclr::interop::marshal_as<std::string>(id), mute);
+        }
+    }
+
     void CoreFunctions::Transition() {
         if (pipelineManager) {
             pipelineManager->Transition();

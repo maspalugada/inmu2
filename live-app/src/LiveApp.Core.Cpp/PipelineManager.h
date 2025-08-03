@@ -32,6 +32,8 @@ public:
     void StopPipeline(const std::string& id);
     void SetAsPreview(const std::string& id);
     void UpdateSourcePosition(const std::string& id, int x, int y);
+    void SetSourceVolume(const std::string& id, double volume);
+    void SetSourceMute(const std::string& id, bool mute);
     void Transition();
     void GetLatestFrame(const std::string& id, std::vector<guint8>& buffer, int& width, int& height);
 

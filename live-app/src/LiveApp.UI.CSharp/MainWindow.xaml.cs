@@ -22,6 +22,8 @@ namespace LiveApp.UI.CSharp
         public double Height { get; set; } = 240;
         private WriteableBitmap bitmap;
         public WriteableBitmap Bitmap { get { return bitmap; } set { bitmap = value; OnPropertyChanged(nameof(Bitmap)); } }
+        public double Volume { get; set; } = 1.0;
+        public bool IsMuted { get; set; } = false;
 
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged(string name)
@@ -242,6 +244,31 @@ namespace LiveApp.UI.CSharp
             if (ScenesListBox.SelectedItem is Scene selectedScene)
             {
                 PreviewItemsControl.ItemsSource = selectedScene.Sources;
+                AudioMixerListBox.ItemsSource = selectedScene.Sources;
+            }
+        }
+
+        private void Volume_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if ((sender as FrameworkElement).DataContext is Source source)
+            {
+                coreFunctions.SetSourceVolume(source.Id, e.NewValue);
+            }
+        }
+
+        private void Mute_Checked(object sender, RoutedEventArgs e)
+        {
+            if ((sender as FrameworkElement).DataContext is Source source)
+            {
+                coreFunctions.SetSourceMute(source.Id, true);
+            }
+        }
+
+        private void Mute_Unchecked(object sender, RoutedEventArgs e)
+        {
+            if ((sender as FrameworkElement).DataContext is Source source)
+            {
+                coreFunctions.SetSourceMute(source.Id, false);
             }
         }
 

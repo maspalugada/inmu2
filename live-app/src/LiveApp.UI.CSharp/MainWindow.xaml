@@ -55,6 +55,7 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
             <GroupBox Header="Scenes" Margin="5">
@@ -69,6 +70,20 @@
 
             <GroupBox Header="Sources" Grid.Column="1" Margin="5">
                 <ListBox x:Name="SourcesListBox" SelectionChanged="SourcesListBox_SelectionChanged"/>
+            </GroupBox>
+
+            <GroupBox Header="Audio Mixer" Grid.Column="2" Margin="5">
+                <ListBox x:Name="AudioMixerListBox">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <TextBlock Text="{Binding Name}"/>
+                                <Slider Minimum="0" Maximum="1" Value="{Binding Volume, Mode=TwoWay}" ValueChanged="Volume_ValueChanged"/>
+                                <CheckBox Content="Mute" IsChecked="{Binding IsMuted, Mode=TwoWay}" Checked="Mute_Checked" Unchecked="Mute_Unchecked"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
             </GroupBox>
         </Grid>
     </Grid>
