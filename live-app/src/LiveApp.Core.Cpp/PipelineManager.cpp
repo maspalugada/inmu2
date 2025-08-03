@@ -16,14 +16,24 @@ PipelineManager::~PipelineManager() {
 void PipelineManager::SetSourceVolume(const std::string& id, double volume) {
     auto it = compositorPads.find(id);
     if (it != compositorPads.end()) {
-        g_object_set(it->second, "volume", volume, NULL);
+        GstPad* pad = it->second;
+        GstElement* audiomixer = gst_pad_get_parent_element(pad);
+        if (audiomixer) {
+            g_object_set(G_OBJECT(audiomixer), "volume", volume, NULL);
+            gst_object_unref(audiomixer);
+        }
     }
 }
 
 void PipelineManager::SetSourceMute(const std::string& id, bool mute) {
     auto it = compositorPads.find(id);
     if (it != compositorPads.end()) {
-        g_object_set(it->second, "mute", mute, NULL);
+        GstPad* pad = it->second;
+        GstElement* audiomixer = gst_pad_get_parent_element(pad);
+        if (audiomixer) {
+            g_object_set(G_OBJECT(audiomixer), "mute", mute, NULL);
+            gst_object_unref(audiomixer);
+        }
     }
 }
 
@@ -33,29 +43,41 @@ GstFlowReturn PipelineManager::OnNewSample(GstElement* sink, PipelineManager* ma
         const gchar* sink_name_char = gst_element_get_name(sink);
         std::string id(sink_name_char);
 
-        auto it = manager->pipelines.find(id);
-        if (it != manager->pipelines.end()) {
-            PipelineWrapper& wrapper = it->second;
+        if (id == "program") {
+            // Handle the program sink separately
             GstBuffer* buffer = gst_sample_get_buffer(sample);
             GstMapInfo map;
             if (gst_buffer_map(buffer, &map, GST_MAP_READ)) {
-                GstCaps* caps = gst_sample_get_caps(sample);
-                GstStructure* s = gst_caps_get_structure(caps, 0);
-                int width, height;
-                gst_structure_get_int(s, "width", &width);
-                gst_structure_get_int(s, "height", &height);
-
-                {
-                    std::lock_guard<std::mutex> lock(wrapper.frameMutex);
-                    wrapper.frameWidth = width;
-                    wrapper.frameHeight = height;
-                    wrapper.frameBuffer.assign(map.data, map.data + map.size);
-                }
-
                 if (manager->frameCallback) {
-                    manager->frameCallback(id);
+                    manager->frameCallback("program");
                 }
                 gst_buffer_unmap(buffer, &map);
+            }
+        } else {
+            auto it = manager->pipelines.find(id);
+            if (it != manager->pipelines.end()) {
+                PipelineWrapper& wrapper = it->second;
+                GstBuffer* buffer = gst_sample_get_buffer(sample);
+                GstMapInfo map;
+                if (gst_buffer_map(buffer, &map, GST_MAP_READ)) {
+                    GstCaps* caps = gst_sample_get_caps(sample);
+                    GstStructure* s = gst_caps_get_structure(caps, 0);
+                    int width, height;
+                    gst_structure_get_int(s, "width", &width);
+                    gst_structure_get_int(s, "height", &height);
+
+                    {
+                        std::lock_guard<std::mutex> lock(wrapper.frameMutex);
+                        wrapper.frameWidth = width;
+                        wrapper.frameHeight = height;
+                        wrapper.frameBuffer.assign(map.data, map.data + map.size);
+                    }
+
+                    if (manager->frameCallback) {
+                        manager->frameCallback(id);
+                    }
+                    gst_buffer_unmap(buffer, &map);
+                }
             }
         }
         gst_sample_unref(sample);
@@ -223,6 +245,10 @@ void PipelineManager::UpdateSourcePosition(const std::string& id, int x, int y) 
         if (pad_it != compositorPads.end()) {
             g_object_set(pad_it->second, "xpos", x, "ypos", y, NULL);
         }
+    }
+    auto pad_it = compositorPads.find(id);
+    if (pad_it != compositorPads.end()) {
+        g_object_set(pad_it->second, "xpos", x, "ypos", y, NULL);
     }
 }
 
