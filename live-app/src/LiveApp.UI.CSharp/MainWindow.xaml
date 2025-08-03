@@ -61,6 +61,8 @@
             <Button Content="Remove Source" Click="RemoveSource_Click" Margin="5"/>
             <Button Content="Start Recording" Click="StartRecording_Click" Margin="5"/>
             <Button Content="Stop Recording" Click="StopRecording_Click" Margin="5"/>
+            <Button Content="Start Virtual Camera" Click="StartVirtualCamera_Click" Margin="5"/>
+            <Button Content="Stop Virtual Camera" Click="StopVirtualCamera_Click" Margin="5"/>
         </StackPanel>
 
         <Grid Grid.Row="2">

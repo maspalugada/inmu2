@@ -23,6 +23,14 @@ GStreamer adalah kerangka kerja multimedia yang menjadi inti dari `live-app`.
     *   Jalankan installer **runtime**. Pilih instalasi "Typical".
     *   **Penting**: Selama instalasi, pastikan Anda menginstal GStreamer ke direktori default (`C:\gstreamer\1.0\msvc_x86_64`). Kode proyek saat ini mengasumsikan lokasi ini.
 
+## Langkah 3: Instalasi OBS Virtual Cam
+
+`live-app` menggunakan OBS Virtual Cam untuk membuat output kamera virtual.
+
+1.  **Unduh OBS Virtual Cam**: Buka [halaman rilis OBS Virtual Cam](https://github.com/miaulightouch/obs-virtual-cam/releases).
+2.  **Pilih Versi Terbaru**: Unduh file `obs-virtualcam-x.x.x-windows-x64-installer.exe` terbaru.
+3.  **Jalankan Installer**: Jalankan installer dan ikuti petunjuk di layar.
+
 ## Langkah 3: Dapatkan Kode Sumber `live-app`
 
 Anda bisa mendapatkan kode dengan mengkloning repositori Git atau mengunduh sebagai file ZIP.

@@ -383,6 +383,16 @@ namespace LiveApp.UI.CSharp
             coreFunctions.StopRecording();
         }
 
+        private void StartVirtualCamera_Click(object sender, RoutedEventArgs e)
+        {
+            coreFunctions.StartVirtualCamera();
+        }
+
+        private void StopVirtualCamera_Click(object sender, RoutedEventArgs e)
+        {
+            coreFunctions.StopVirtualCamera();
+        }
+
         private void Properties_Click(object sender, RoutedEventArgs e)
         {
             if (SourcesListBox.SelectedItem is Source selectedSource)

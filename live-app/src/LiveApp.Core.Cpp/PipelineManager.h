@@ -48,6 +48,9 @@ public:
 
     void SetTextOverlay(const std::string& text, const std::string& font, int size, int color, int x, int y);
 
+    void StartVirtualCamera();
+    void StopVirtualCamera();
+
     void GetLatestFrame(const std::string& id, std::vector<guint8>& buffer, int& width, int& height);
     std::vector<std::vector<guint8>> GenerateTransitionPreview(TransitionType type, int& width, int& height);
     std::vector<std::string> GetVideoDevices();

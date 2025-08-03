@@ -30,6 +30,26 @@ PipelineManager::~PipelineManager() {
     }
 }
 
+void PipelineManager::StartVirtualCamera() {
+    if (compositorPipeline) {
+        GstElement* virtual_cam_sink = gst_bin_get_by_name(GST_BIN(compositorPipeline), "virtual_cam_sink");
+        if (virtual_cam_sink) {
+            gst_element_set_state(virtual_cam_sink, GST_STATE_PLAYING);
+            gst_object_unref(virtual_cam_sink);
+        }
+    }
+}
+
+void PipelineManager::StopVirtualCamera() {
+    if (compositorPipeline) {
+        GstElement* virtual_cam_sink = gst_bin_get_by_name(GST_BIN(compositorPipeline), "virtual_cam_sink");
+        if (virtual_cam_sink) {
+            gst_element_set_state(virtual_cam_sink, GST_STATE_NULL);
+            gst_object_unref(virtual_cam_sink);
+        }
+    }
+}
+
 void PipelineManager::SetSourceVolume(const std::string& id, double volume) {
     auto it = compositorPads.find(id);
     if (it != compositorPads.end()) {
@@ -429,7 +449,7 @@ void PipelineManager::SetAsPreview(const std::string& id) {
 
 void PipelineManager::LinkSourceToCompositor(const std::string& id) {
     if (compositorPipeline == nullptr) {
-        std::string pipeline_str = "compositor name=comp ! textoverlay name=text_overlay ! tee name=t ! queue ! videoconvert ! video/x-raw,format=BGRx ! appsink name=program t. ! queue ! x264enc ! mp4mux name=mux ! filesink location=test.mp4 audiomixer name=mix ! audioconvert ! audioresample ! mux.";
+        std::string pipeline_str = "compositor name=comp ! textoverlay name=text_overlay ! tee name=t ! queue ! videoconvert ! video/x-raw,format=BGRx ! appsink name=program t. ! queue ! x264enc ! mp4mux name=mux ! filesink location=test.mp4 t. ! queue ! dshowvideosink name=virtual_cam_sink audiomixer name=mix ! audioconvert ! audioresample ! mux.";
         compositorPipeline = gst_parse_launch(pipeline_str.c_str(), nullptr);
 
         GstElement* sink = gst_bin_get_by_name(GST_BIN(compositorPipeline), "program");

@@ -130,6 +130,18 @@ namespace LiveAppCore {
         }
     }
 
+    void CoreFunctions::StartVirtualCamera() {
+        if (pipelineManager) {
+            pipelineManager->StartVirtualCamera();
+        }
+    }
+
+    void CoreFunctions::StopVirtualCamera() {
+        if (pipelineManager) {
+            pipelineManager->StopVirtualCamera();
+        }
+    }
+
     void CoreFunctions::AddFilter(System::String^ id, FilterType type) {
         if (pipelineManager) {
             pipelineManager->AddFilter(msclr::interop::marshal_as<std::string>(id), (PipelineManager::FilterType)type);
