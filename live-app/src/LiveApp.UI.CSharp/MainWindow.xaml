@@ -80,7 +80,13 @@
             </GroupBox>
 
             <GroupBox Header="Sources" Grid.Column="1" Margin="5">
-                <ListBox x:Name="SourcesListBox" SelectionChanged="SourcesListBox_SelectionChanged"/>
+                <ListBox x:Name="SourcesListBox" SelectionChanged="SourcesListBox_SelectionChanged">
+                    <ListBox.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Properties" Click="Properties_Click"/>
+                        </ContextMenu>
+                    </ListBox.ContextMenu>
+                </ListBox>
             </GroupBox>
 
             <GroupBox Header="Audio Mixer" Grid.Column="2" Margin="5">

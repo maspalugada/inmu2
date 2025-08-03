@@ -254,6 +254,72 @@ std::vector<std::vector<guint8>> PipelineManager::GenerateTransitionPreview(Tran
     return frames;
 }
 
+std::vector<std::string> PipelineManager::GetVideoDevices() {
+    std::vector<std::string> devices;
+    GstDeviceMonitor* monitor = gst_device_monitor_new();
+    gst_device_monitor_start(monitor);
+    GList* device_list = gst_device_monitor_get_devices(monitor);
+
+    for (GList* l = device_list; l != nullptr; l = l->next) {
+        GstDevice* device = (GstDevice*)l->data;
+        gchar* name = gst_device_get_display_name(device);
+        devices.push_back(name);
+        g_free(name);
+    }
+
+    g_list_free_full(device_list, gst_object_unref);
+    gst_device_monitor_stop(monitor);
+    gst_object_unref(monitor);
+    return devices;
+}
+
+std::vector<std::string> PipelineManager::GetDeviceCapabilities(const std::string& deviceName) {
+    std::vector<std::string> capabilities;
+    GstDeviceMonitor* monitor = gst_device_monitor_new();
+    gst_device_monitor_start(monitor);
+    GList* device_list = gst_device_monitor_get_devices(monitor);
+
+    for (GList* l = device_list; l != nullptr; l = l->next) {
+        GstDevice* device = (GstDevice*)l->data;
+        gchar* name = gst_device_get_display_name(device);
+        if (deviceName == name) {
+            GstCaps* caps = gst_device_get_caps(device);
+            if (caps) {
+                for (guint i = 0; i < gst_caps_get_size(caps); ++i) {
+                    GstStructure* s = gst_caps_get_structure(caps, i);
+                    gchar* caps_str = gst_structure_to_string(s);
+                    capabilities.push_back(caps_str);
+                    g_free(caps_str);
+                }
+                gst_caps_unref(caps);
+            }
+        }
+        g_free(name);
+    }
+
+    g_list_free_full(device_list, gst_object_unref);
+    gst_device_monitor_stop(monitor);
+    gst_object_unref(monitor);
+    return capabilities;
+}
+
+void PipelineManager::UpdateSourceProperties(const std::string& id, const std::string& deviceName, const std::string& capability) {
+    auto it = pipelines.find(id);
+    if (it != pipelines.end()) {
+        gst_element_set_state(it->second.pipeline, GST_STATE_NULL);
+
+        GstElement* source = gst_bin_get_by_name(GST_BIN(it->second.pipeline), id.c_str());
+        if (source) {
+            // This is a simplified implementation. A real implementation would parse the capability string
+            // and set the corresponding properties on the source element.
+            g_object_set(source, "device", deviceName.c_str(), NULL);
+            gst_object_unref(source);
+        }
+
+        gst_element_set_state(it->second.pipeline, GST_STATE_PLAYING);
+    }
+}
+
 void PipelineManager::StopPipeline(const std::string& id) {
     auto it = pipelines.find(id);
     if (it != pipelines.end()) {

@@ -120,6 +120,16 @@ namespace LiveAppCore {
         }
     }
 
+    void CoreFunctions::UpdateSourceProperties(System::String^ id, System::String^ deviceName, System::String^ capability) {
+        if (pipelineManager) {
+            pipelineManager->UpdateSourceProperties(
+                msclr::interop::marshal_as<std::string>(id),
+                msclr::interop::marshal_as<std::string>(deviceName),
+                msclr::interop::marshal_as<std::string>(capability)
+            );
+        }
+    }
+
     array<System::Byte, 2>^ CoreFunctions::GenerateTransitionPreview(TransitionType type, int% width, int% height) {
         if (pipelineManager) {
             int w, h;
@@ -172,5 +182,29 @@ namespace LiveAppCore {
         guint major, minor, micro, nano;
         gst_version(&major, &minor, &micro, &nano);
         return System::String::Format("GStreamer version: {0}.{1}.{2}.{3}", major, minor, micro, nano);
+    }
+
+    System::Collections::Generic::List<System::String^>^ CoreFunctions::GetVideoDevices() {
+        if (pipelineManager) {
+            std::vector<std::string> devices = pipelineManager->GetVideoDevices();
+            System::Collections::Generic::List<System::String^>^ result = gcnew System::Collections::Generic::List<System::String^>();
+            for (const auto& device : devices) {
+                result->Add(msclr::interop::marshal_as<System::String^>(device));
+            }
+            return result;
+        }
+        return nullptr;
+    }
+
+    System::Collections::Generic::List<System::String^>^ CoreFunctions::GetDeviceCapabilities(System::String^ deviceName) {
+        if (pipelineManager) {
+            std::vector<std::string> capabilities = pipelineManager->GetDeviceCapabilities(msclr::interop::marshal_as<std::string>(deviceName));
+            System::Collections::Generic::List<System::String^>^ result = gcnew System::Collections::Generic::List<System::String^>();
+            for (const auto& cap : capabilities) {
+                result->Add(msclr::interop::marshal_as<System::String^>(cap));
+            }
+            return result;
+        }
+        return nullptr;
     }
 }

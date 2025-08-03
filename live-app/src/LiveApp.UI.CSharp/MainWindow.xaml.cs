@@ -42,46 +42,6 @@ namespace LiveApp.UI.CSharp
 
     public partial class MainWindow : Window
     {
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using LiveAppCore;
-
-namespace LiveApp.UI.CSharp
-{
-    public class Source : INotifyPropertyChanged
-    {
-        public string Id { get; set; }
-        public string Name { get; set; }
-        private double x;
-        public double X { get { return x; } set { x = value; OnPropertyChanged(nameof(X)); } }
-        private double y;
-        public double Y { get { return y; } set { y = value; OnPropertyChanged(nameof(Y)); } }
-        public double Width { get; set; } = 320;
-        public double Height { get; set; } = 240;
-        private WriteableBitmap bitmap;
-        public WriteableBitmap Bitmap { get { return bitmap; } set { bitmap = value; OnPropertyChanged(nameof(Bitmap)); } }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged(string name)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-        }
-    }
-
-    public class Scene
-    {
-        public string Name { get; set; }
-        public ObservableCollection<Source> Sources { get; set; } = new ObservableCollection<Source>();
-    }
-
-    public partial class MainWindow : Window
-    {
         private CoreFunctions coreFunctions;
         private WriteableBitmap programBitmap;
         private bool isRendering = false;
@@ -420,6 +380,18 @@ namespace LiveApp.UI.CSharp
         private void StopRecording_Click(object sender, RoutedEventArgs e)
         {
             coreFunctions.StopRecording();
+        }
+
+        private void Properties_Click(object sender, RoutedEventArgs e)
+        {
+            if (SourcesListBox.SelectedItem is Source selectedSource)
+            {
+                var dialog = new SourcePropertiesDialog(coreFunctions);
+                if (dialog.ShowDialog() == true)
+                {
+                    coreFunctions.UpdateSourceProperties(selectedSource.Id, dialog.SelectedDevice, dialog.SelectedCapability);
+                }
+            }
         }
     }
 }

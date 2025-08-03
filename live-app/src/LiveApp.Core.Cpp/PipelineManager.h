@@ -38,8 +38,11 @@ public:
     void Transition();
     void StartRecording(const std::string& filePath);
     void StopRecording();
+    void UpdateSourceProperties(const std::string& id, const std::string& deviceName, const std::string& capability);
     void GetLatestFrame(const std::string& id, std::vector<guint8>& buffer, int& width, int& height);
     std::vector<std::vector<guint8>> GenerateTransitionPreview(TransitionType type, int& width, int& height);
+    std::vector<std::string> GetVideoDevices();
+    std::vector<std::string> GetDeviceCapabilities(const std::string& deviceName);
 
 private:
     static GstFlowReturn OnNewSample(GstElement* sink, PipelineManager* manager);

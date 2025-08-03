@@ -30,8 +30,12 @@ namespace LiveAppCore {
         void Transition();
         void StartRecording(System::String^ filePath);
         void StopRecording();
+        void UpdateSourceProperties(System::String^ id, System::String^ deviceName, System::String^ capability);
         array<System::Byte, 2>^ GenerateTransitionPreview(TransitionType type, int% width, int% height);
         array<System::Byte>^ GetLatestFrame(System::String^ id, int% width, int% height);
+
+        System::Collections::Generic::List<System::String^>^ GetVideoDevices();
+        System::Collections::Generic::List<System::String^>^ GetDeviceCapabilities(System::String^ deviceName);
 
         static System::String^ GetGStreamerVersion();
 

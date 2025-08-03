@@ -1,0 +1,19 @@
+<Window x:Class="LiveApp.UI.CSharp.SourcePropertiesDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:LiveApp.UI.CSharp"
+        mc:Ignorable="d"
+        Title="Source Properties" Height="450" Width="800">
+    <Grid>
+        <StackPanel Margin="10">
+            <TextBlock Text="Device:"/>
+            <ComboBox x:Name="DeviceComboBox" SelectionChanged="DeviceComboBox_SelectionChanged"/>
+            <TextBlock Text="Capabilities:"/>
+            <ComboBox x:Name="CapabilitiesComboBox"/>
+            <Button Content="OK" Click="OK_Click" Margin="0,10,0,0"/>
+            <Button Content="Cancel" Click="Cancel_Click" Margin="0,5,0,0"/>
+        </StackPanel>
+    </Grid>
+</Window>
