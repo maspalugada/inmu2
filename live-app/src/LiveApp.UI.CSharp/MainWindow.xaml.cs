@@ -282,6 +282,22 @@ namespace LiveApp.UI.CSharp
             coreFunctions.Transition();
         }
 
+        private void TransitionComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (TransitionComboBox.SelectedItem is ComboBoxItem selectedItem)
+            {
+                switch (selectedItem.Content.ToString())
+                {
+                    case "Cut":
+                        coreFunctions.SetTransitionType(LiveAppCore.CoreFunctions.TransitionType.Cut);
+                        break;
+                    case "Fade":
+                        coreFunctions.SetTransitionType(LiveAppCore.CoreFunctions.TransitionType.Fade);
+                        break;
+                }
+            }
+        }
+
         private bool isDragging = false;
         private Point dragStartPoint;
         private Source draggedSource;

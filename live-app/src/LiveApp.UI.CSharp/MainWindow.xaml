@@ -37,7 +37,13 @@
                 </ItemsControl>
             </Border>
 
-            <Button Content="Transition" Grid.Column="1" VerticalAlignment="Center" Margin="10" Click="Transition_Click"/>
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <ComboBox x:Name="TransitionComboBox" Margin="5" SelectionChanged="TransitionComboBox_SelectionChanged">
+                    <ComboBoxItem Content="Cut"/>
+                    <ComboBoxItem Content="Fade"/>
+                </ComboBox>
+                <Button Content="Transition" Margin="5" Click="Transition_Click"/>
+            </StackPanel>
 
             <Border BorderBrush="Red" BorderThickness="2" Grid.Column="2" Margin="5">
                 <Image x:Name="ProgramImage" />

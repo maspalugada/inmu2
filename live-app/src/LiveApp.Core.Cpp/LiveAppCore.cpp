@@ -91,6 +91,12 @@ namespace LiveAppCore {
         }
     }
 
+    void CoreFunctions::SetTransitionType(TransitionType type) {
+        if (pipelineManager) {
+            pipelineManager->SetTransitionType((PipelineManager::TransitionType)type);
+        }
+    }
+
     void CoreFunctions::Transition() {
         if (pipelineManager) {
             pipelineManager->Transition();

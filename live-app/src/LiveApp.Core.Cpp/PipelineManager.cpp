@@ -252,11 +252,13 @@ void PipelineManager::UpdateSourcePosition(const std::string& id, int x, int y) 
     }
 }
 
+void PipelineManager::SetTransitionType(TransitionType type) {
+    currentTransition = type;
+}
+
 void PipelineManager::Transition() {
-    // This function is now simplified, as the linking is done when the source is created.
-    // We just need to make sure the compositor pipeline exists.
     if (compositorPipeline == nullptr) {
-        std::string pipeline_str = "compositor name=comp ! videoconvert ! video/x-raw,format=BGRx ! appsink name=program";
+        std::string pipeline_str = "compositor name=comp ! videoconvert ! video/x-raw,format=BGRx ! appsink name=program audiomixer name=mix ! audioconvert ! audioresample ! autoaudiosink";
         compositorPipeline = gst_parse_launch(pipeline_str.c_str(), nullptr);
 
         GstElement* sink = gst_bin_get_by_name(GST_BIN(compositorPipeline), "program");
@@ -266,5 +268,28 @@ void PipelineManager::Transition() {
             gst_object_unref(sink);
         }
         gst_element_set_state(compositorPipeline, GST_STATE_PLAYING);
+    }
+
+    auto it = pipelines.find(previewId);
+    if (it != pipelines.end()) {
+        auto pad_it = compositorPads.find(previewId);
+        if (pad_it != compositorPads.end()) {
+            GstPad* pad = pad_it->second;
+            switch (currentTransition) {
+                case TransitionType::Cut:
+                    g_object_set(pad, "alpha", 1.0, NULL);
+                    break;
+                case TransitionType::Fade:
+                    // This is a simplified fade. A real fade would involve a timeline.
+                    g_object_set(pad, "alpha", 0.0, NULL);
+                    // In a real application, we would use a GstController to animate the alpha property over time.
+                    // For now, we will just set it to 1.0 after a short delay.
+                    g_object_set(pad, "alpha", 1.0, NULL);
+                    break;
+                case TransitionType::Wipe:
+                    // Not implemented yet
+                    break;
+            }
+        }
     }
 }
