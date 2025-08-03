@@ -11,55 +11,71 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
-using LiveAppCore;
+using System;
+using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Threading;
+using LiveAppCore;
 
 namespace LiveApp.UI.CSharp
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
         private CoreFunctions coreFunctions;
         private WriteableBitmap writeableBitmap;
-        private Timer timer;
+        private bool isRendering = false;
 
         public MainWindow()
         {
             InitializeComponent();
             coreFunctions = new CoreFunctions();
-            this.Loaded += MainWindow_Loaded;
+            coreFunctions.OnFrameReady += OnFrameReady;
+            this.Closing += (s, e) => coreFunctions.StopWebcam();
         }
 
-        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        private void OnFrameReady()
         {
-            // The GStreamer version check is still useful for debugging.
-            // You can leave it or remove it.
-            try
+            if (!isRendering)
             {
-                var version = CoreFunctions.GetGStreamerVersion();
-                MessageBox.Show(version, "GStreamer Integration Test");
+                isRendering = true;
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    RenderFrame();
+                    isRendering = false;
+                }));
             }
-            catch (Exception ex)
+        }
+
+        private void RenderFrame()
+        {
+            int width = 0, height = 0;
+            var frameData = coreFunctions.GetLatestFrame(ref width, ref height);
+
+            if (frameData == null || width == 0 || height == 0)
+                return;
+
+            if (writeableBitmap == null || writeableBitmap.Width != width || writeableBitmap.Height != height)
             {
-                MessageBox.Show($"An error occurred: {ex.Message}", "Error");
+                writeableBitmap = new WriteableBitmap(width, height, 96, 96, PixelFormats.Bgr32, null);
+                WebcamImage.Source = writeableBitmap;
             }
+
+            writeableBitmap.Lock();
+            System.Runtime.InteropServices.Marshal.Copy(frameData, 0, writeableBitmap.BackBuffer, frameData.Length);
+            writeableBitmap.AddDirtyRect(new Int32Rect(0, 0, width, height));
+            writeableBitmap.Unlock();
         }
 
         private void StartWebcam_Click(object sender, RoutedEventArgs e)
         {
-            // For now, we'll just start the pipeline.
-            // The frame handling will be added later.
             coreFunctions.StartWebcam();
         }
 
         private void StopWebcam_Click(object sender, RoutedEventArgs e)
         {
             coreFunctions.StopWebcam();
+            writeableBitmap = null;
+            WebcamImage.Source = null;
         }
     }
 }
