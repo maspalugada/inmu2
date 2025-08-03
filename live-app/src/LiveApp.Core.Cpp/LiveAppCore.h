@@ -4,6 +4,7 @@
 
 namespace LiveAppCore {
     public delegate void FrameReadyHandler(System::String^ id);
+    public delegate void AudioLevelHandler(System::String^ id, double level);
 
     public ref class CoreFunctions {
     public:
@@ -33,9 +34,11 @@ namespace LiveAppCore {
         static System::String^ GetGStreamerVersion();
 
         event FrameReadyHandler^ OnFrameReady;
+        event AudioLevelHandler^ OnAudioLevel;
 
     private:
         void FrameReady(const std::string& id);
+        void AudioLevel(const std::string& id, double level);
         PipelineManager* pipelineManager;
     };
 }

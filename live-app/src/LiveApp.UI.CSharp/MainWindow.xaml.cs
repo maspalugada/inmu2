@@ -24,6 +24,8 @@ namespace LiveApp.UI.CSharp
         public WriteableBitmap Bitmap { get { return bitmap; } set { bitmap = value; OnPropertyChanged(nameof(Bitmap)); } }
         public double Volume { get; set; } = 1.0;
         public bool IsMuted { get; set; } = false;
+        private double vuValue;
+        public double VuValue { get { return vuValue; } set { vuValue = value; OnPropertyChanged(nameof(VuValue)); } }
 
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged(string name)
@@ -91,6 +93,7 @@ namespace LiveApp.UI.CSharp
             InitializeComponent();
             coreFunctions = new CoreFunctions();
             coreFunctions.OnFrameReady += OnFrameReady;
+            coreFunctions.OnAudioLevel += OnAudioLevel;
             this.Closing += (s, e) =>
             {
                 foreach (var scene in scenes)
@@ -104,6 +107,34 @@ namespace LiveApp.UI.CSharp
 
             ScenesListBox.ItemsSource = scenes;
             AddScene_Click(null, null);
+        }
+
+        private void OnAudioLevel(string id, double level)
+        {
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                Source sourceToUpdate = null;
+                foreach (var scene in scenes)
+                {
+                    foreach (var source in scene.Sources)
+                    {
+                        if (source.Id == id)
+                        {
+                            sourceToUpdate = source;
+                            break;
+                        }
+                    }
+                    if (sourceToUpdate != null) break;
+                }
+
+                if (sourceToUpdate != null)
+                {
+                    // The level is in dB, so we need to convert it to a linear scale.
+                    // This is a simplified conversion.
+                    double linear = Math.Pow(10, level / 20.0);
+                    sourceToUpdate.VuValue = linear;
+                }
+            }));
         }
 
         private void OnFrameReady(string id)

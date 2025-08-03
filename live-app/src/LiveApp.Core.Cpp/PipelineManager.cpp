@@ -1,6 +1,23 @@
 #include "PipelineManager.h"
 
-PipelineManager::PipelineManager(FrameCallback callback) : frameCallback(callback) {
+static gboolean bus_call(GstBus* bus, GstMessage* msg, gpointer data) {
+    PipelineManager* manager = (PipelineManager*)data;
+    if (GST_MESSAGE_TYPE(msg) == GST_MESSAGE_ELEMENT) {
+        const GstStructure* s = gst_message_get_structure(msg);
+        if (g_strcmp0(gst_structure_get_name(s), "level") == 0) {
+            double rms_db;
+            if (gst_structure_get_double(s, "rms", &rms_db)) {
+                std::string name(gst_structure_get_name(s));
+                // The name of the level element is "level_<id>"
+                std::string id = name.substr(6);
+                manager->audioLevelCallback(id, rms_db);
+            }
+        }
+    }
+    return TRUE;
+}
+
+PipelineManager::PipelineManager(FrameCallback frameCb, AudioLevelCallback audioCb) : frameCallback(frameCb), audioLevelCallback(audioCb) {
     gst_init(nullptr, nullptr);
 }
 
@@ -97,7 +114,7 @@ void PipelineManager::GetLatestFrame(const std::string& id, std::vector<guint8>&
 }
 
 bool PipelineManager::CreateWebcamPipeline(const std::string& id) {
-    std::string pipeline_str = "ksvideosrc ! tee name=t ! queue ! videoconvert ! video/x-raw,format=BGRx ! appsink name=" + id + " t. ! queue ! audioconvert ! audioresample ! appsink name=audio_" + id;
+    std::string pipeline_str = "ksvideosrc ! tee name=t ! queue ! videoconvert ! video/x-raw,format=BGRx ! appsink name=" + id + " t. ! queue ! audioconvert ! audioresample ! level name=level_" + id + " ! appsink name=audio_" + id;
     pipelines[id].pipeline = gst_parse_launch(pipeline_str.c_str(), nullptr);
     if (!pipelines[id].pipeline) return false;
 
@@ -113,13 +130,17 @@ bool PipelineManager::CreateWebcamPipeline(const std::string& id) {
         // We don't need to do anything with the audio sink for now, but we need to make sure it exists.
         gst_object_unref(audio_sink);
     }
+
+    GstBus* bus = gst_pipeline_get_bus(GST_PIPELINE(pipelines[id].pipeline));
+    gst_bus_add_watch(bus, bus_call, this);
+    gst_object_unref(bus);
 
     LinkSourceToCompositor(id);
     return true;
 }
 
 bool PipelineManager::CreateScreenCapturePipeline(const std::string& id) {
-    std::string pipeline_str = "gdiscreencapsrc ! videoconvert ! video/x-raw,format=BGRx ! appsink name=" + id + " wasapisrc ! audioconvert ! audioresample ! appsink name=audio_" + id;
+    std::string pipeline_str = "gdiscreencapsrc ! videoconvert ! video/x-raw,format=BGRx ! appsink name=" + id + " wasapisrc ! audioconvert ! audioresample ! level name=level_" + id + " ! appsink name=audio_" + id;
     pipelines[id].pipeline = gst_parse_launch(pipeline_str.c_str(), nullptr);
     if (!pipelines[id].pipeline) return false;
 
@@ -135,13 +156,17 @@ bool PipelineManager::CreateScreenCapturePipeline(const std::string& id) {
         // We don't need to do anything with the audio sink for now, but we need to make sure it exists.
         gst_object_unref(audio_sink);
     }
+
+    GstBus* bus = gst_pipeline_get_bus(GST_PIPELINE(pipelines[id].pipeline));
+    gst_bus_add_watch(bus, bus_call, this);
+    gst_object_unref(bus);
 
     LinkSourceToCompositor(id);
     return true;
 }
 
 bool PipelineManager::CreateVideoFilePipeline(const std::string& id, const std::string& filePath) {
-    std::string pipeline_str = "filesrc location=\"" + filePath + "\" ! decodebin name=d d. ! queue ! videoconvert ! video/x-raw,format=BGRx ! appsink name=" + id + " d. ! queue ! audioconvert ! audioresample ! appsink name=audio_" + id;
+    std::string pipeline_str = "filesrc location=\"" + filePath + "\" ! decodebin name=d d. ! queue ! videoconvert ! video/x-raw,format=BGRx ! appsink name=" + id + " d. ! queue ! audioconvert ! audioresample ! level name=level_" + id + " ! appsink name=audio_" + id;
     pipelines[id].pipeline = gst_parse_launch(pipeline_str.c_str(), nullptr);
     if (!pipelines[id].pipeline) return false;
 
@@ -157,6 +182,10 @@ bool PipelineManager::CreateVideoFilePipeline(const std::string& id, const std::
         // We don't need to do anything with the audio sink for now, but we need to make sure it exists.
         gst_object_unref(audio_sink);
     }
+
+    GstBus* bus = gst_pipeline_get_bus(GST_PIPELINE(pipelines[id].pipeline));
+    gst_bus_add_watch(bus, bus_call, this);
+    gst_object_unref(bus);
 
     LinkSourceToCompositor(id);
     return true;

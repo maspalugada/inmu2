@@ -21,7 +21,10 @@ namespace LiveAppCore {
     }
 
     CoreFunctions::CoreFunctions() {
-        pipelineManager = new PipelineManager([this](const std::string& id) { this->FrameReady(id); });
+        pipelineManager = new PipelineManager(
+            [this](const std::string& id) { this->FrameReady(id); },
+            [this](const std::string& id, double level) { this->AudioLevel(id, level); }
+        );
     }
 
     CoreFunctions::~CoreFunctions() {
@@ -128,6 +131,10 @@ namespace LiveAppCore {
 
     void CoreFunctions::FrameReady(const std::string& id) {
         OnFrameReady(msclr::interop::marshal_as<System::String^>(id));
+    }
+
+    void CoreFunctions::AudioLevel(const std::string& id, double level) {
+        OnAudioLevel(msclr::interop::marshal_as<System::String^>(id), level);
     }
 
     array<System::Byte>^ CoreFunctions::GetLatestFrame(System::String^ id, int% width, int% height) {

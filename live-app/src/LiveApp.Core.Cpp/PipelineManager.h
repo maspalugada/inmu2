@@ -21,8 +21,9 @@ public:
 class PipelineManager {
 public:
     using FrameCallback = std::function<void(const std::string&)>;
+    using AudioLevelCallback = std::function<void(const std::string&, double)>;
 
-    PipelineManager(FrameCallback callback);
+    PipelineManager(FrameCallback frameCallback, AudioLevelCallback audioLevelCallback);
     ~PipelineManager();
 
     bool CreateWebcamPipeline(const std::string& id);
@@ -52,5 +53,6 @@ private:
     std::string previewId;
     GstElement* compositorPipeline = nullptr;
     FrameCallback frameCallback;
+    AudioLevelCallback audioLevelCallback;
     TransitionType currentTransition = TransitionType::Cut;
 };

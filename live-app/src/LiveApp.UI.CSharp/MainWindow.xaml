@@ -89,6 +89,7 @@
                                 <TextBlock Text="{Binding Name}"/>
                                 <Slider Minimum="0" Maximum="1" Value="{Binding Volume, Mode=TwoWay}" ValueChanged="Volume_ValueChanged"/>
                                 <CheckBox Content="Mute" IsChecked="{Binding IsMuted, Mode=TwoWay}" Checked="Mute_Checked" Unchecked="Mute_Unchecked"/>
+                                <ProgressBar Minimum="0" Maximum="1" Value="{Binding VuValue}" Height="10"/>
                             </StackPanel>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
